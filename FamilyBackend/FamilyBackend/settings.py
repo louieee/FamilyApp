@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     "Family",
     "Chat",
     "User",
-    "Tasks",
-    "Meeting",
-    "Wallet"
+    "Scheduler",
+    "Voting",
+    "Timetable"
 ]
 
 MIDDLEWARE = [

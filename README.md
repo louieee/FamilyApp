@@ -16,11 +16,9 @@ FamilyApp is a feature-rich application built with Django and React (TypeScript)
 
 💡 **Ideas Board**: Foster creativity and collaboration by providing a platform for family members to share and discuss their ideas. From vacation plans to new project proposals, the ideas board is the perfect place to brainstorm together.
 
-📅 **Calendar Integration**: Sync the FamilyApp calendar with your personal calendars, ensuring that everyone is aware of upcoming family events and important dates.
-
 📣 **Announcements**: Share important announcements and updates with your family through the app. From reminders to special announcements, keep everyone informed and engaged.
 
-📷 **Media Gallery**: Create and manage a shared media gallery where you can upload and organize photos and videos from family gatherings, trips, and other memorable moments.
+
 
 ## Installation
 

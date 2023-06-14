@@ -5,4 +5,4 @@ from core.models import TimeTable
 
 
 class TimeTableAPI(ModelViewSet):
-	queryset = TimeTable.objects.all()
+    queryset = TimeTable.objects.all()

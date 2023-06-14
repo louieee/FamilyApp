@@ -7,7 +7,5 @@ app_name = "scheduler"
 router = SimpleRouter()
 router.register("pipelines", scheduler.PipelineAPI)
 
-urlpatterns = [
-
-]
+urlpatterns = []
 urlpatterns.extend(router.urls)

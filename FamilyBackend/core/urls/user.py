@@ -6,7 +6,5 @@ from ..views import user
 app_name = "user"
 router = SimpleRouter()
 router.register("", user.UserAPI)
-urlpatterns = [
-
-]
+urlpatterns = []
 urlpatterns.extend(router.urls)

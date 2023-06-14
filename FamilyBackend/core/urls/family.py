@@ -7,7 +7,5 @@ app_name = "family"
 router = SimpleRouter()
 router.register("", family.FamilyAPI)
 
-urlpatterns = [
-
-]
+urlpatterns = []
 urlpatterns.extend(router.urls)

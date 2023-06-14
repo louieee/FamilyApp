@@ -3,4 +3,4 @@ from core.models import VotingSession
 
 
 class BallotAPI(ModelViewSet):
-	queryset = VotingSession.objects.all()
+    queryset = VotingSession.objects.all()

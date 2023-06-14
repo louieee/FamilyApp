@@ -3,4 +3,4 @@ from core.models import Family
 
 
 class FamilyAPI(ModelViewSet):
-	queryset = Family.objects.all()
+    queryset = Family.objects.all()

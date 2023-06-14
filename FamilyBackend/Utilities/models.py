@@ -3,7 +3,7 @@ import os
 import django
 from django.db.models import Q
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FamilyBackend.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "FamilyBackend.settings")
 django.setup()
 from User.models import User
 from Family.models import Family

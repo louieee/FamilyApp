@@ -4,4 +4,4 @@ from core.models import User
 
 
 class UserAPI(ModelViewSet):
-	queryset = User.objects.all()
+    queryset = User.objects.all()

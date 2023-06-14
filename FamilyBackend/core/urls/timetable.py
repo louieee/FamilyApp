@@ -7,7 +7,5 @@ app_name = "time_table"
 router = SimpleRouter()
 router.register("", timetable.TimeTableAPI)
 
-urlpatterns = [
-
-]
+urlpatterns = []
 urlpatterns.extend(router.urls)

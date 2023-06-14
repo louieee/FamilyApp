@@ -7,6 +7,7 @@ from django.db import models
 
 # Create your models here.
 
+
 class Gender(models.TextChoices):
     Male = ("Male", "Male")
     Female = ("Female", "Female")
@@ -19,9 +20,13 @@ class Couple(models.Model):
 
 class User(AbstractUser):
     family = models.ForeignKey("core.Family", on_delete=models.CASCADE, null=True)
-    parent = models.ForeignKey("Couple", null=True, default=None, on_delete=models.SET_NULL)
+    parent = models.ForeignKey(
+        "Couple", null=True, default=None, on_delete=models.SET_NULL
+    )
     last_name = family.name
-    gender = models.CharField(max_length=10, choices=Gender.choices, default=None, null=True)
+    gender = models.CharField(
+        max_length=10, choices=Gender.choices, default=None, null=True
+    )
 
     @property
     def children(self):
@@ -34,7 +39,9 @@ class User(AbstractUser):
 
     @property
     def grand_parents(self):
-        parents = chain(*self.parent.users.values_list("parent__users__username", flat=True))
+        parents = chain(
+            *self.parent.users.values_list("parent__users__username", flat=True)
+        )
         return User.objects.filter(username__in=parents)
 
     @property
@@ -43,16 +50,22 @@ class User(AbstractUser):
 
     @property
     def parent_siblings(self):
-        return User.objects.filter(parent_id__in=self.parents.values_list("parent_id", flat=True))
+        return User.objects.filter(
+            parent_id__in=self.parents.values_list("parent_id", flat=True)
+        )
 
     @property
     def siblings_children(self):
-        couples = Couple.objects.filter(users__in=self.siblings).values_list("id", flat=True)
+        couples = Couple.objects.filter(users__in=self.siblings).values_list(
+            "id", flat=True
+        )
         return User.objects.filter(parent_id__in=couples)
 
     @property
     def parent_siblings_children(self):
-        couples = Couple.objects.filter(users__in=self.parent_siblings).values_list("id", flat=True)
+        couples = Couple.objects.filter(users__in=self.parent_siblings).values_list(
+            "id", flat=True
+        )
         return User.objects.filter(parent_id__in=couples)
 
     def relationship(self, user):
@@ -67,7 +80,9 @@ class User(AbstractUser):
             elif user in self.parents:
                 relationship = "father" if user.gender == Gender.Male else "mother"
             elif user in self.grand_parents:
-                relationship = "grand father" if user.gender == Gender.Male else "grand mother"
+                relationship = (
+                    "grand father" if user.gender == Gender.Male else "grand mother"
+                )
             elif user in self.parent_siblings:
                 relationship = "uncle" if user.gender == Gender.Male else "aunty"
             elif user in self.siblings_children:

@@ -4,4 +4,4 @@ from core.models import Pipeline
 
 
 class PipelineAPI(ModelViewSet):
-	queryset = Pipeline.objects.all()
+    queryset = Pipeline.objects.all()

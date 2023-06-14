@@ -7,7 +7,5 @@ app_name = "ballot"
 router = SimpleRouter()
 router.register("", ballot.BallotAPI)
 
-urlpatterns = [
-
-]
+urlpatterns = []
 urlpatterns.extend(router.urls)

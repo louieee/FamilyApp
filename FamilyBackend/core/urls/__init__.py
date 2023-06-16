@@ -6,4 +6,5 @@ urlpatterns = [
     path("app/timetable/", include("core.urls.timetable")),
     path("app/ballot/", include("core.urls.ballot")),
     path("users/", include("core.urls.user")),
+    path("app/subscriptions/", include("core.urls.subscription"))
 ]

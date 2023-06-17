@@ -22,6 +22,7 @@ class Role(models.Model):
 class User(AbstractUser):
 	family = models.ForeignKey("core.Family", on_delete=models.CASCADE, null=True)
 	last_name = family.name
+	creator = models.BooleanField(default=False)
 	gender = models.CharField(
 		max_length=10, choices=Gender.choices, default=None, null=True
 	)

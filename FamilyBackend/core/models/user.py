@@ -20,10 +20,16 @@ class Role(models.Model):
 
 
 class User(AbstractUser):
-	family = models.ForeignKey("core.Family", on_delete=models.CASCADE, null=True)
-	last_name = family.name
+	families = models.ManyToManyField("core.Family", blank=True)
 	creator = models.BooleanField(default=False)
 	gender = models.CharField(
 		max_length=10, choices=Gender.choices, default=None, null=True
 	)
-	role = models.ForeignKey("core.Role", on_delete=models.SET_NULL, null=True, default=True, blank=True)
+
+	def get_role(self, family):
+		return UserRole.objects.filter(family=family, user=self).first()
+
+
+class UserRole(models.Model):
+	user = models.ForeignKey("core.User", on_delete=models.CASCADE)
+	role = models.ForeignKey("core.Role", on_delete=models.CASCADE)

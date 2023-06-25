@@ -35,5 +35,5 @@ class Task(models.Model):
     repeat = models.BooleanField(default=False)
     assignees = models.ManyToManyField("core.User")
     creator = models.ForeignKey(
-        "core.User", on_delete=models.CASCADE, related_name="creator"
+        "core.User", on_delete=models.CASCADE, related_name="task_creator"
     )

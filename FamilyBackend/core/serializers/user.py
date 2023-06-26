@@ -27,13 +27,12 @@ class RoleSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-	families = FamilySerializer(many=True, read_only=True)
 	role = serializers.SerializerMethodField(read_only=True)
 
 	class Meta:
 		model = User
-		fields = ("id", "username", "email", "first_name", "last_name", "families", "gender", "role")
-		read_only_fields = ('id', 'families', "email", "role")
+		fields = ("id", "username", "email", "first_name", "last_name", "gender", "role")
+		read_only_fields = ('id', "email", "role")
 
 	def get_role(self, obj):
 		family = self.context.get("family")
@@ -99,6 +98,26 @@ class ResetPasswordSerializer(serializers.Serializer):
 		user = User.objects.filter(email=temp_data.data['email']).first()
 		if not user:
 			raise serializers.ValidationError("No user with this email exists")
+		user.set_password(validated_data.pop("new_password"))
+		user.save()
+		return user
+
+	def update(self, instance, validated_data):
+		...
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+	old_password = serializers.CharField()
+	new_password = serializers.CharField()
+
+	def validate(self, attrs):
+		user = self.context.get("user")
+		if not user.check_password(attrs.pop("old_password")):
+			raise serializers.ValidationError("Your password is incorrect")
+		return attrs
+
+	def create(self, validated_data):
+		user = self.context.get("user")
 		user.set_password(validated_data.pop("new_password"))
 		user.save()
 		return user

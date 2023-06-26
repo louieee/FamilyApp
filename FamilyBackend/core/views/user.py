@@ -6,35 +6,29 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from core.utilities.api_response import SuccessResponse, FailureResponse
 from core.models import User, FamilyTempData, Family, UserRole
 from core.serializers.user import RoleSerializer, LoginSerializer, UserSerializer, ResetPasswordSerializer, \
-	ForgotPasswordSerializer
-
-"""
-TODOS: 
-
-endpoint to change password
-"""
+	ForgotPasswordSerializer, ChangePasswordSerializer
+from core.utilities.api_response import SuccessResponse, FailureResponse
 
 
 class RoleAPI(ModelViewSet):
 	queryset = User.objects.all()
 	serializer_class = RoleSerializer
 
-	@swagger_auto_schema(operation_summary="creates a new role")
+	@swagger_auto_schema(request_body=RoleSerializer, operation_summary="creates a new role", security=[{}])
 	def create(self, request, *args, **kwargs):
 		return self.create(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="retrieves list of roles")
+	@swagger_auto_schema(operation_summary="retrieves list of roles", security=[{}])
 	def list(self, request, *args, **kwargs):
 		return self.list(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="retrieve a new role")
+	@swagger_auto_schema(operation_summary="retrieve a new role", security=[{}])
 	def retrieve(self, request, *args, **kwargs):
 		return self.list(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="destroys a new role")
+	@swagger_auto_schema(operation_summary="destroys a new role", security=[{}])
 	def destroy(self, request, *args, **kwargs):
 		return self.destroy(request, *args, **kwargs)
 
@@ -44,6 +38,7 @@ class RoleAPI(ModelViewSet):
 			items=openapi.Schema(type=openapi.TYPE_INTEGER),
 			example=[1, 2, 3],
 		),
+		security=[{}],
 		operation_summary="assigns a role to a list of users"
 	)
 	@action(detail=True, methods=["post"], url_path="assign-users", url_name="assign-users")
@@ -101,12 +96,13 @@ class UserAPI(APIView):
 	http_method_names = ("patch", "get")
 	permission_classes = (IsAuthenticated,)
 
-	@swagger_auto_schema(operation_summary="retrieves a logged in user's details")
+	@swagger_auto_schema(operation_summary="retrieves a logged in user's details", security=[{}])
 	def get(self, request, *args, **kwargs):
 		data = UserSerializer(request.user).data
 		return SuccessResponse(data=data)
 
 	@swagger_auto_schema(operation_summary="updates a logged in user's details",
+	                     security=[{}],
 	                     request_body=UserSerializer, responses={200: UserSerializer()})
 	def patch(self, request, *args, **kwargs):
 		serializer = UserSerializer(data=request.data)
@@ -129,3 +125,16 @@ class LoginAPI(APIView):
 		user = data.pop('user')
 		login(request, user)
 		return SuccessResponse(message="Login successful", data=data)
+
+
+class ChangePasswordAPI(APIView):
+	http_method_names = ("post",)
+	permission_classes = (IsAuthenticated,)
+
+	@swagger_auto_schema(operation_summary="allows a user to change their password",
+	                     request_body=ChangePasswordSerializer, security=[{}])
+	def post(self, request, *args, **kwargs):
+		serializer = ChangePasswordSerializer(data=request.data, context={"user", request.user})
+		serializer.is_valid(raise_exception=True)
+		serializer.save()
+		return FailureResponse(message="Password changed successfully")

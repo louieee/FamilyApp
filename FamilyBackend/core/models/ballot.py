@@ -6,10 +6,10 @@ from django.db.models import Sum, Count
 
 
 class VotingSession(models.Model):
-	family = models.ForeignKey("core.Family", on_delete=models.CASCADE)
+	family = models.ForeignKey("core.Family", on_delete=models.CASCADE, default=None, null=True)
 	title = models.CharField(max_length=200)
 	description = models.TextField()
-	positions = models.ManyToManyField("Position")
+	positions = models.ManyToManyField("Position", blank=True)
 	date_conducted = models.DateTimeField(default=None, null=True)
 
 	def winners(self):
@@ -17,7 +17,7 @@ class VotingSession(models.Model):
 
 
 class Position(models.Model):
-	family = models.ForeignKey("core.Family", on_delete=models.CASCADE)
+	family = models.ForeignKey("core.Family", on_delete=models.CASCADE, default=None, null=True)
 	title = models.CharField(max_length=100)
 	description = models.TextField()
 

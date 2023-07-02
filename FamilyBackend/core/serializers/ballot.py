@@ -12,7 +12,7 @@ class AspirantSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Aspirant
-		excludes = ("session",)
+		exclude = ("session",)
 
 	def get_votes(self, obj):
 		return obj.votes.objects.count()

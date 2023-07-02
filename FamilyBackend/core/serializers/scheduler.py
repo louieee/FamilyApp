@@ -29,7 +29,7 @@ class StageSerializer(serializers.ModelSerializer):
 
 	def validate(self, attrs):
 		pipeline = attrs.get("pipeline")
-		pipeline = self.instance.pipeline if self.instance and not pipeline else None
+		pipeline = self.instance.pipeline if self.instance and not pipeline else pipeline
 		if pipeline and "title" in attrs:
 			stage = Stage.objects.filter(pipeline=pipeline, title__iexact=attrs.get("title"))
 			stage = stage.exclude(id=self.instance.id) if self.instance else stage
@@ -41,8 +41,8 @@ class StageSerializer(serializers.ModelSerializer):
 class CreateTaskSerializer(serializers.ModelSerializer):
 	title = CustomCharField(case="title")
 	auto_move = serializers.BooleanField(required=False)
+	auto_done = serializers.BooleanField(required=False)
 	done = serializers.BooleanField(required=False)
-	notify = serializers.BooleanField(required=False)
 	repeat = serializers.BooleanField(required=False)
 
 	class Meta:
@@ -52,12 +52,18 @@ class CreateTaskSerializer(serializers.ModelSerializer):
 	def validate(self, attrs):
 		attrs['creator'] = self.context.get("user")
 		stage = attrs.get("stage")
-		stage = self.instance.stage if self.instance and not stage else None
+		stage = self.instance.stage if self.instance and not stage else stage
 		if "title" in attrs and stage:
 			task = Task.objects.filter(stage=stage, title__iexact=attrs.get("title"))
 			task = task.exclude(id=self.instance) if self.instance else task
 			if task.exists():
 				raise serializers.ValidationError("A task with this title already exists")
+		auto_move = attrs.get("auto_move")
+		auto_move = self.instance.auto_move if self.instance and not auto_move else auto_move
+		repeat = attrs.get("repeat")
+		repeat = self.instance.repeat if self.instance and not repeat else repeat
+		if auto_move and repeat and auto_move is True and repeat is True:
+			raise serializers.ValidationError("A task can either be on repeat or auto move but not both")
 		return attrs
 
 

@@ -21,7 +21,6 @@ class Role(models.Model):
 
 class User(AbstractUser):
 	families = models.ManyToManyField("core.Family", blank=True)
-	creator = models.BooleanField(default=False)
 	gender = models.CharField(
 		max_length=10, choices=Gender.choices, default=None, null=True
 	)

@@ -12,7 +12,8 @@ admin.site.register(Stage)
 admin.site.register(Task)
 
 admin.site.register(TimeTable)
-admin.site.register(Label)
+admin.site.register(Row)
+admin.site.register(Column)
 admin.site.register(Item)
 
 admin.site.register(VotingSession)

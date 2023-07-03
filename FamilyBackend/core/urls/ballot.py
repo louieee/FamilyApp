@@ -5,7 +5,9 @@ from ..views import ballot
 
 app_name = "ballot"
 router = SimpleRouter()
-router.register("", ballot.BallotAPI)
+router.register("", ballot.VotingSessionAPI, basename="ballot")
+router.register("positions", ballot.PositionAPI, basename="positions")
+router.register("aspirants", ballot.AspirantAPI, basename="aspirants")
 
 urlpatterns = []
 urlpatterns.extend(router.urls)

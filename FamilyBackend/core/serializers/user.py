@@ -65,7 +65,7 @@ class LoginSerializer(serializers.Serializer):
 	def create(self, validated_data):
 		from rest_framework_simplejwt.tokens import RefreshToken
 		refresh_token = RefreshToken.for_user(user=validated_data['user'])
-		validated_data['access_token'] = get_access_token(refresh_token)
+		validated_data['access_token'] = get_access_token(str(refresh_token))
 		return validated_data
 
 	def update(self, instance, validated_data):

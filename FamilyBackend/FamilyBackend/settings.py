@@ -9,10 +9,11 @@ https://docs.djangoproject.com/en/3.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
+from django.core.mail import backends
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_celery_beat",
     "rest_framework",
+    "rest_framework_simplejwt",
     "FamilyBackend",
     "core"
     # "core"
@@ -130,7 +132,8 @@ SWAGGER_SETTINGS = {
     # "DEFAULT_AUTO_SCHEMA_CLASS": "apps.api.inspectors.SwaggerAutoSchema",
     "USE_SESSION_AUTH": False,
     "SECURITY_DEFINITIONS": {
-        "Token": {"type": "apiKey", "name": "Authorization", "in": "header"},
+        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+        "Family": {"type": "apiKey", "name": "Family", "in": "header"},
     },
 }
 
@@ -142,6 +145,12 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_RENDERER_CLASSES": ("core.utilities.api_response.CustomJSONRenderer",),
+}
+
+# simple jwt settings
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
 CHANNEL_LAYERS = {
@@ -172,3 +181,11 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TASK_TIME_LIMIT = 5 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 60
+
+EMAIL_BACKEND = config('EMAIL_BACKEND', "django.core.mail.backends.console.EmailBackend")
+# EMAIL_HOST = 'smtp.office365.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+# EMAIL_USE_TLS = True
+# DEFAULT_FROM_EMAIL = f'Family App Team <{EMAIL_HOST_USER}>'

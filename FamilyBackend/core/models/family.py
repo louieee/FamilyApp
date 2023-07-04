@@ -14,7 +14,7 @@ class Family(models.Model):
 	identifier = models.CharField(unique=True, default=uuid.uuid4, max_length=36, editable=False)
 	username = models.CharField(max_length=100, default=None, null=True)
 	name = models.CharField(max_length=100)
-	creator = models.ForeignKey("core.User", on_delete=models.SET_NULL, null=True)
+	creator = models.ForeignKey("core.User", on_delete=models.CASCADE, null=True)
 
 	class Meta:
 		verbose_name_plural = "Families"
@@ -32,4 +32,4 @@ class FamilyTempData(models.Model):
 	data = models.JSONField(default=dict)
 	data_type = models.CharField(choices=FamilyTempDataTypes.choices, default=FamilyTempDataTypes.SIGNUP,
 	                             max_length=30)
-	expiry_date = models.DateTimeField()
+	expiry_date = models.DateTimeField(null=True, default=None)

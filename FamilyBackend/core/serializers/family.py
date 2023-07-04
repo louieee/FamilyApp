@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.core.mail import EmailMessage
+from django.utils import timezone
 from rest_framework import serializers
 
 from core.models import User, Family, FamilyTempData, FamilyTempDataTypes
@@ -43,8 +46,10 @@ class FamilySignupSerializer(serializers.ModelSerializer):
 		return attrs
 
 	def create(self, validated_data):
-		temp_data = FamilyTempData.objects.create(data=validated_data, data_type=FamilyTempDataTypes.SIGNUP)
+		temp_data = FamilyTempData.objects.create(data=validated_data, data_type=FamilyTempDataTypes.SIGNUP,
+		                                          expiry_date=(timezone.now() + timedelta(hours=24)))
 		# TODO  more context will be added to this email section
+		print(temp_data.hash_code)
 		EmailMessage(subject="Email Verification", body=temp_data.hash_code, from_email="info@localhost",
 		             to=[validated_data.get("email"), ], )
 		return temp_data
@@ -68,6 +73,8 @@ class CreateFamilySerializer(serializers.ModelSerializer):
 	def create(self, validated_data):
 		user = self.context.get("user")
 		family = Family.objects.create(**validated_data, creator=user)
+		user.families.add(family)
+		user.save()
 		return family
 
 
@@ -77,9 +84,10 @@ class FamilyVerificationSerializer(serializers.Serializer):
 
 	def validate(self, attrs):
 		temp_data = FamilyTempData.objects.filter(hash_code=attrs.pop("hash_code"))
-		if temp_data:
+		if not temp_data.exists():
 			raise serializers.ValidationError("This link has expired, please you have to sign up again.")
-		attrs = temp_data.first().data
+		attrs = {** temp_data.first().data, "password": attrs.pop("password")}
+		temp_data.delete()
 		return attrs
 
 	def create(self, validated_data):
@@ -110,17 +118,19 @@ class FamilyInviteSerializer(serializers.Serializer):
 			return attrs
 		if users.filter(families__username=family.username).exists():
 			raise serializers.ValidationError("A family member with this email already exists.")
-		if FamilyTempData.objects.filter(family__isnull=family, data_type=FamilyTempDataTypes.INVITE).filter(
+		if FamilyTempData.objects.filter(family=family, data_type=FamilyTempDataTypes.INVITE).filter(
 				data__email=attrs.get("email")).exists():
 			raise serializers.ValidationError("This email is taken already")
 		attrs['family'] = family
 		return attrs
 
 	def create(self, validated_data):
-		family = self.context.get("family")
+		family = validated_data.pop("family")
 		if 'user' not in validated_data:
 			temp_data = FamilyTempData.objects.create(family=family, data=validated_data,
-			                                          data_type=FamilyTempDataTypes.INVITE)
+			                                          data_type=FamilyTempDataTypes.INVITE,
+			                                          expiry_date=(timezone.now() + timedelta(hours=24)))
+			print(temp_data.hash_code)
 			# TODO  more context will be added to this email section
 			EmailMessage(subject=f"{family.name} Family Membership Invitation", body=temp_data.hash_code,
 			             from_email="info@localhost",
@@ -141,7 +151,7 @@ class AcceptFamilyInviteSerializer(serializers.Serializer):
 
 	def validate(self, attrs):
 		temp_data = FamilyTempData.objects.filter(hash_code=attrs.get("hash_code"))
-		if temp_data:
+		if not temp_data.exists():
 			raise serializers.ValidationError("This link has expired, please ask to be re-invited")
 		temp_data = temp_data.first().data
 		attrs = {**attrs, **temp_data}
@@ -152,7 +162,7 @@ class AcceptFamilyInviteSerializer(serializers.Serializer):
 	def create(self, validated_data):
 		temp = FamilyTempData.objects.filter(hash_code=validated_data.pop("hash_code")).first()
 		user = User.objects.create_user(**validated_data)
-		user.families.add(temp.families)
+		user.families.add(temp.family)
 		user.save()
 		temp.delete()
 		return user

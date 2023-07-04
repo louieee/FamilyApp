@@ -26,7 +26,7 @@ class User(AbstractUser):
 	)
 
 	def get_role(self, family):
-		return UserRole.objects.filter(family=family, user=self).first()
+		return UserRole.objects.filter(role__family=family, user=self).first()
 
 
 class UserRole(models.Model):

@@ -5,6 +5,7 @@ from ..views import user
 
 app_name = "user"
 router = SimpleRouter()
+router.register("roles", user.RoleAPI)
 
 urlpatterns = [
 	path("auth/login", user.LoginAPI.as_view(), name="auth-login"),

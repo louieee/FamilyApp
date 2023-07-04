@@ -25,8 +25,8 @@ def get_access_token(refresh_token):
 	serializer = TokenRefreshSerializer(data=data)
 	serializer.is_valid(raise_exception=True)
 	tokens = serializer.validated_data
+	return str(tokens['access'])
 
-	# Return the new access token
-	return {
-		'access_token': str(tokens['access']),
-	}
+
+def get_family(request):
+	return request.META.get("HTTP_FAMILY")

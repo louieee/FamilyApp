@@ -15,20 +15,25 @@ class AspirantSerializer(serializers.ModelSerializer):
 		exclude = ("session",)
 
 	def get_votes(self, obj):
-		return obj.votes.objects.count()
+		return obj.votes.count()
 
 
 class PositionSerializer(serializers.ModelSerializer):
-	winner = serializers.SerializerMethodField(read_only=True)
+	winners = serializers.SerializerMethodField(read_only=True)
 
 	class Meta:
 		model = Position
 		fields = "__all__"
+		read_only_fields = ("family",)
 
-	def get_winner(self, obj):
-		return AspirantSerializer(obj.winner).data
+	def get_winners(self, obj):
+		session = self.context.get("session")
+		if session:
+			return AspirantSerializer(obj.winner(session), many=True).data
+		return None
 
 	def validate(self, attrs):
+		attrs['family'] = self.context.get("family")
 		position = Position.objects.filter(family=attrs['family'], title__iexact=attrs['title'])
 		position = position.exclude(id=self.instance.id) if self.instance else position
 		if position.exists():
@@ -50,24 +55,24 @@ class CreateVotingSessionSerializer(serializers.ModelSerializer):
 	title = CustomCharField(case="title")
 	class Meta:
 		model = VotingSession
-		fields = ("title", "description", "family", "positions")
+		fields = ("title", "description", "positions", "date_conducted", 'date_concluded')
 
 	def validate(self, attrs):
-		session = VotingSession.objects.filter(family=attrs['family'], title__iexact=attrs['title'])
-		session = session.exclude(id=self.instance.id) if self.instance else session
-		if session.exists():
-			raise serializers.ValidationError("A voting session with this title exists already")
+		attrs['family'] = self.context.get("family")
+		if "title" in attrs:
+			session = VotingSession.objects.filter(family=attrs['family'], title__iexact=attrs['title'])
+			session = session.exclude(id=self.instance.id) if self.instance else session
+			if session.exists():
+				raise serializers.ValidationError("A voting session with this title exists already")
 		return attrs
 
 
 class CreateAspirantSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Aspirant
-		exclude = ("votes", "session")
+		exclude = ("votes",)
 
 	def validate(self, attrs):
-		attrs['session'] = self.context.get("session")
-		attrs['position'] = self.context.get("position")
 		if Aspirant.objects.filter(user=attrs['user'], session=attrs['session']):
 			raise serializers.ValidationError("This user is already vying for a position")
 		return attrs

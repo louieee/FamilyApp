@@ -115,6 +115,7 @@ class FamilyInviteSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         family = self.context.get("family")
+        attrs['family'] = family
         users = User.objects.filter(email=attrs.get("email"))
         if users.exists():
             attrs['user'] = users.first()
@@ -124,7 +125,6 @@ class FamilyInviteSerializer(serializers.Serializer):
         if FamilyTempData.objects.filter(family=family, data_type=FamilyTempDataTypes.INVITE).filter(
                 data__email=attrs.get("email")).exists():
             raise serializers.ValidationError("This email is taken already")
-        attrs['family'] = family
         return attrs
 
     def create(self, validated_data):
@@ -144,6 +144,7 @@ class FamilyInviteSerializer(serializers.Serializer):
         EmailMessage(subject=f"{family.name} Family Membership Invitation", body=family.identifier,
                      from_email="info@localhost",
                      to=[user.email, ], )
+        print(family.identifier)
         return user
 
 
@@ -183,6 +184,7 @@ class AuthAcceptFamilyInviteSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         family = validated_data.pop("family")
-        user = User.families.add(family)
+        user = self.context.get("user")
+        user.families.add(family)
         user.save()
         return user

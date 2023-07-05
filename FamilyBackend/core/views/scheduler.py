@@ -5,8 +5,10 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import Pipeline, Task, Stage, Family
-from core.serializers.scheduler import PipelineSerializer, StageSerializer, CreateTaskSerializer, TaskSerializer
+from core.serializers.scheduler import PipelineSerializer, StageSerializer, CreateTaskSerializer, TaskSerializer, \
+	UpdateStageSerializer
 from core.utilities.api_response import SuccessResponse, FailureResponse
+from core.utilities.utils import get_family
 
 
 class CanUseScheduler(BasePermission):
@@ -26,7 +28,11 @@ class PipelineAPI(ModelViewSet):
 	def get_serializer_context(self):
 		data = super(PipelineAPI, self).get_serializer_context()
 		data['user'] = self.request.user
+		data['family'] = Family.objects.get(username__iexact=get_family(self.request))
 		return data
+
+	def get_queryset(self):
+		return Pipeline.objects.filter(family__username__iexact=get_family(self.request))
 
 	@swagger_auto_schema(operation_summary="create a pipeline", tags=['scheduler', ],
 	                     request_body=PipelineSerializer)
@@ -74,13 +80,13 @@ class PipelineAPI(ModelViewSet):
 			return FailureResponse(message="You cannot perform this action")
 		curr = Stage.objects.filter(id=request.data[0]).first()
 		index = 0
-		while index < len(request.data) and curr:
-			index += 1
-			next_stage = Stage.objects.filter(id=request.data[index]).first()
+		while index < len(request.data):
+			next_stage = Stage.objects.filter(id=request.data[index+1]).first() if index + 1 < len(request.data) else None
 			curr.next_stage = next_stage
 			curr.level = index
 			curr.save()
 			curr = next_stage
+			index+=1
 		stages = Stage.objects.filter(pipeline=pipeline).order_by('level')
 		return SuccessResponse(message=f"stages have been rearranged successfully",
 		                       data=StageSerializer(stages, many=True).data)
@@ -99,7 +105,7 @@ class StageAPI(ModelViewSet):
 	def get_queryset(self):
 		pipeline = self.request.query_params.get("pipeline")
 		if pipeline:
-			return self.queryset.filter(pipeline_id=pipeline).order_by("level")
+			return self.queryset.filter(pipeline_id=pipeline, pipeline__family__username__exact=get_family(self.request)).order_by("level")
 		return self.queryset
 
 	@swagger_auto_schema(request_body=StageSerializer,
@@ -107,9 +113,10 @@ class StageAPI(ModelViewSet):
 	def create(self, request, *args, **kwargs):
 		return super(StageAPI, self).create(request, *args, **kwargs)
 
-	@swagger_auto_schema(request_body=StageSerializer,
+	@swagger_auto_schema(request_body=UpdateStageSerializer,
 	                     operation_summary="updates a stage in a pipeline", tags=['scheduler', ])
 	def partial_update(self, request, *args, **kwargs):
+		self.serializer_class = UpdateStageSerializer
 		return super(StageAPI, self).partial_update(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves stages in a pipeline", tags=['scheduler', ],
@@ -143,19 +150,25 @@ class TaskAPI(ModelViewSet):
 
 	def get_queryset(self):
 		stage = self.request.query_params.get("stage")
-		return self.queryset.filter(stage=stage)
+		self.queryset = self.queryset.filter(stage__pipeline__family=Family.objects.get(username__iexact=get_family(self.request)))
+		if stage:
+			self.queryset = self.queryset.filter(stage=stage)
+		return self.queryset
 
 	@swagger_auto_schema(request_body=CreateTaskSerializer,
 	                     operation_summary="adds a task to a stage in a pipeline", tags=['scheduler', ])
 	def create(self, request, *args, **kwargs):
+		self.serializer_class = CreateTaskSerializer
 		return super(TaskAPI, self).create(request, *args, **kwargs)
 
 	@swagger_auto_schema(request_body=CreateTaskSerializer,
 	                     operation_summary="updates a task in a stage", tags=['scheduler', ])
 	def partial_update(self, request, *args, **kwargs):
+		self.serializer_class = CreateTaskSerializer
 		return super(TaskAPI, self).partial_update(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="retrieves all tasks in a stage", tags=['scheduler', ])
+	@swagger_auto_schema(operation_summary="retrieves all tasks in a stage", tags=['scheduler', ],
+	                     manual_parameters=[stage_query,])
 	def list(self, request, *args, **kwargs):
 		return super(TaskAPI, self).list(request, *args, **kwargs)
 

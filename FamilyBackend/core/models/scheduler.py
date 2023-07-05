@@ -19,7 +19,7 @@ class Stage(models.Model):
 	title = models.CharField(max_length=100)
 	description = models.TextField()
 	level = models.PositiveSmallIntegerField(default=0, blank=True)
-	next_stage = models.ForeignKey("Stage", on_delete=models.SET_NULL, null=True, default=True)
+	next_stage = models.ForeignKey("Stage", on_delete=models.SET_NULL, null=True, default=None)
 	pipeline = models.ForeignKey("Pipeline", on_delete=models.CASCADE)
 
 

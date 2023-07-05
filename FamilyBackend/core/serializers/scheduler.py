@@ -11,8 +11,11 @@ class PipelineSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Pipeline
 		fields = "__all__"
+		read_only_fields = ("family", "creator")
 
 	def validate(self, attrs):
+		attrs['family'] = self.context.get("family")
+		attrs['creator'] = self.context.get("user")
 		pipeline = Pipeline.objects.filter(family=attrs.get('family'), title__iexact=attrs.get("title"))
 		pipeline = pipeline.exclude(id=self.instance.id) if self.instance else pipeline
 		if pipeline.exists():
@@ -35,6 +38,21 @@ class StageSerializer(serializers.ModelSerializer):
 			stage = stage.exclude(id=self.instance.id) if self.instance else stage
 			if stage.exists():
 				raise serializers.ValidationError("A stage with this title exists already")
+		return attrs
+
+
+class UpdateStageSerializer(serializers.ModelSerializer):
+	title = CustomCharField(case="title")
+
+	class Meta:
+		model = Stage
+		fields = "__all__"
+		read_only_fields = ("pipeline", "level", "next_stage")
+
+	def validate(self, attrs):
+		if "title" in attrs and Stage.objects.filter(pipeline=self.instance.pipeline,
+		                                             title__iexact=attrs.get("title")).exclude(id=self.instance.id):
+			raise serializers.ValidationError("A stage with this title exists already")
 		return attrs
 
 

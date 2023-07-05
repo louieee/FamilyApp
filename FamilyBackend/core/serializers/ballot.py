@@ -41,8 +41,6 @@ class PositionSerializer(serializers.ModelSerializer):
 		return attrs
 
 
-
-
 class VotingSessionSerializer(serializers.ModelSerializer):
 	positions = PositionSerializer(many=True)
 
@@ -53,6 +51,7 @@ class VotingSessionSerializer(serializers.ModelSerializer):
 
 class CreateVotingSessionSerializer(serializers.ModelSerializer):
 	title = CustomCharField(case="title")
+
 	class Meta:
 		model = VotingSession
 		fields = ("title", "description", "positions", "date_conducted", 'date_concluded')

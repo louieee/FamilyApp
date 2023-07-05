@@ -28,6 +28,19 @@ class RoleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 	role = serializers.SerializerMethodField(read_only=True)
+	username = CustomCharField(case="lower")
+	email = CustomEmailField()
+
+	def validate(self, attrs):
+		users = User.objects
+		if self.instance:
+			users = users.exclude(id=self.instance.id)
+		if "email" in attrs and users.filter(email__iexact=attrs.get('email')).exists():
+			raise serializers.ValidationError("A user with this email already exists")
+		if "username" in attrs and users.filter(username__iexact=attrs.get("username")).exists():
+			raise serializers.ValidationError("A user with this username already exists")
+		return attrs
+
 
 	class Meta:
 		model = User
@@ -83,7 +96,8 @@ class ForgotPasswordSerializer(serializers.Serializer):
 		                                     expiry_date=(timezone.now() + timedelta(hours=24)))
 		EmailMessage(subject="Reset Password Request", body=temp.hash_code, from_email="local@host.com",
 		             to=[user.email, ])
-		return
+		print(temp.hash_code)
+		return user
 
 	def update(self, instance, validated_data):
 		...

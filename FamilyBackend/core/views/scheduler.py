@@ -1,18 +1,27 @@
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.viewsets import ModelViewSet
 
-from core.models import Pipeline, Task, Stage
+from core.models import Pipeline, Task, Stage, Family
 from core.serializers.scheduler import PipelineSerializer, StageSerializer, CreateTaskSerializer, TaskSerializer
 from core.utilities.api_response import SuccessResponse, FailureResponse
+
+
+class CanUseScheduler(BasePermission):
+	message = "You don't have a license for the scheduler app"
+
+	def has_permission(self, request, view):
+		family = Family.objects.get(username=request.META.get("HTTP_FAMILY"))
+		return family.can_use_scheduler()
 
 
 class PipelineAPI(ModelViewSet):
 	queryset = Pipeline.objects.all()
 	serializer_class = PipelineSerializer
 	http_method_names = ("get", "post", "patch", "delete")
+	permission_classes = (IsAuthenticated, CanUseScheduler)
 
 	def get_serializer_context(self):
 		data = super(PipelineAPI, self).get_serializer_context()
@@ -20,27 +29,27 @@ class PipelineAPI(ModelViewSet):
 		return data
 
 	@swagger_auto_schema(operation_summary="create a pipeline", tags=['scheduler', ],
-	                     security=[{}], request_body=PipelineSerializer)
+	                     request_body=PipelineSerializer)
 	def create(self, request, *args, **kwargs):
 		return super(PipelineAPI, self).create(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="updates a pipeline", tags=['scheduler', ],
-	                     security=[{}], request_body=PipelineSerializer)
+	                     request_body=PipelineSerializer)
 	def partial_update(self, request, *args, **kwargs):
 		return super(PipelineAPI, self).partial_update(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a pipeline", tags=['scheduler', ],
-	                     security=[{}])
+	                     )
 	def retrieve(self, request, *args, **kwargs):
 		return super(PipelineAPI, self).retrieve(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a list of pipelines", tags=['scheduler', ],
-	                     security=[{}])
+	                     )
 	def list(self, request, *args, **kwargs):
 		return super(PipelineAPI, self).list(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="deletes a pipeline", tags=["scheduler", ],
-	                     security=[{}])
+	                     )
 	def destroy(self, request, *args, **kwargs):
 		return super(PipelineAPI, self).destroy(request, *args, **kwargs)
 
@@ -51,7 +60,7 @@ class PipelineAPI(ModelViewSet):
 			example=[1, 2, 3],
 			description="user IDs of the stages"
 		),
-		security=[{}],
+
 		operation_summary="re-arrange stages in a pipeline",
 		tags=['scheduler', ]
 
@@ -81,6 +90,7 @@ class StageAPI(ModelViewSet):
 	queryset = Stage.objects.all()
 	serializer_class = StageSerializer
 	http_method_names = ("get", "post", "patch", "delete")
+	permission_classes = (IsAuthenticated, CanUseScheduler)
 
 	pipeline_query = openapi.Parameter('pipeline', in_=openapi.IN_QUERY, type=openapi.TYPE_NUMBER,
 	                                   description="Pipeline ID",
@@ -103,7 +113,7 @@ class StageAPI(ModelViewSet):
 		return super(StageAPI, self).partial_update(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves stages in a pipeline", tags=['scheduler', ],
-	                     manual_parameters=[pipeline_query,])
+	                     manual_parameters=[pipeline_query, ])
 	def list(self, request, *args, **kwargs):
 		return super(StageAPI, self).list(request, *args, **kwargs)
 
@@ -120,7 +130,7 @@ class TaskAPI(ModelViewSet):
 	queryset = Task.objects.all()
 	serializer_class = TaskSerializer
 	http_method_names = ("get", "post", "patch", "delete")
-	permission_classes = [IsAuthenticated, ]
+	permission_classes = (IsAuthenticated, CanUseScheduler)
 
 	stage_query = openapi.Parameter('stage', in_=openapi.IN_QUERY, type=openapi.TYPE_NUMBER,
 	                                description="Stage ID",

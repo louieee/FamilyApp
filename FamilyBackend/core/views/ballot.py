@@ -2,17 +2,28 @@ from django.db.models import Q
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.viewsets import ModelViewSet
-from core.models import VotingSession, Position, Aspirant
+
+from core.models import VotingSession, Position, Aspirant, Family
 from core.serializers.ballot import VotingSessionSerializer, CreateVotingSessionSerializer, PositionSerializer, \
 	CreateAspirantSerializer, AspirantSerializer
 from core.utilities.api_response import SuccessResponse
+
+
+class CanUseBallot(BasePermission):
+	message = "You don't have a license for the ballot app"
+
+	def has_permission(self, request, view):
+		family = Family.objects.get(username=request.META.get("HTTP_FAMILY"))
+		return family.can_use_ballot()
 
 
 class VotingSessionAPI(ModelViewSet):
 	queryset = VotingSession.objects.all()
 	serializer_class = VotingSessionSerializer
 	http_method_names = ("get", "post", "patch", "delete")
+	permission_classes = (IsAuthenticated, CanUseBallot)
 
 	@swagger_auto_schema(request_body=CreateVotingSessionSerializer,
 	                     operation_summary="creates a voting session", tags=['ballot', ]
@@ -65,7 +76,6 @@ class VotingSessionAPI(ModelViewSet):
 		aspirant.delete()
 		return SuccessResponse(message="Aspirant removed successfully")
 
-
 	@swagger_auto_schema(operation_summary="votes for an aspirant", tags=['ballot', ])
 	@action(methods=["post", ], detail=False,
 	        url_path="aspirants/<int:aspirant_id>/vote",
@@ -81,7 +91,8 @@ class VotingSessionAPI(ModelViewSet):
 class AspirantAPI(ModelViewSet):
 	queryset = Aspirant.objects.all()
 	serializer_class = AspirantSerializer
-	http_method_names = ("get", )
+	http_method_names = ("get",)
+	permission_classes = (IsAuthenticated, CanUseBallot)
 
 	position_query = openapi.Parameter("position", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
 	                                   description="Position ID",
@@ -112,11 +123,11 @@ class AspirantAPI(ModelViewSet):
 		return super(AspirantAPI, self).retrieve(request, *args, **kwargs)
 
 
-
 class PositionAPI(ModelViewSet):
 	queryset = Position.objects.all()
 	serializer_class = PositionSerializer
 	http_method_names = ("get", "post", "patch", "delete")
+	permission_classes = (IsAuthenticated, CanUseBallot)
 
 	search_query = openapi.Parameter(name="search", in_=openapi.IN_QUERY, description="search position",
 	                                 type=openapi.TYPE_STRING)

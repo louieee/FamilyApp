@@ -1,9 +1,8 @@
 from django.db import models
-from django.db.models import Sum, Count
+from django.db.models import Count
 
 
 # Create your models here.
-
 
 class VotingSession(models.Model):
 	family = models.ForeignKey("core.Family", on_delete=models.CASCADE, default=None, null=True)

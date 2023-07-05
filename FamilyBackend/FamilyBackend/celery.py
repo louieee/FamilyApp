@@ -3,7 +3,7 @@ import os
 from celery import Celery
 from celery.schedules import crontab
 
-from core.tasks import scheduler, timetable, family
+from core.tasks import scheduler, timetable, family, subscription
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "FamilyBackend.settings")
@@ -35,6 +35,8 @@ def setup_periodic_tasks(sender, **kwargs):
 	sender.add_periodic_task(crontab(minute="*"), timetable.titled_notify.s(), name="notify_titled")
 
 	sender.add_periodic_task(crontab(minute="*"), family.clear_expired_temp_data.s(), name="clear_temp_data")
+
+	sender.add_periodic_task(crontab(minute="*"), subscription.delete_unpaid_subs.s(), name="clear_unpaid_subs")
 
 
 @app.task(bind=True)

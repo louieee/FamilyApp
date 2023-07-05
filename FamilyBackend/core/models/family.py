@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils import timezone
 
 
 # Create your models here.
@@ -21,6 +22,23 @@ class Family(models.Model):
 
 	def __str__(self):
 		return f"{self.name} Family"
+
+	def can_use_ballot(self):
+		from core.models import Apps
+		return self._can_use_app(Apps.BallotApp)
+
+	def can_use_scheduler(self):
+		from core.models import Apps
+		return self._can_use_app(Apps.SchedulerApp)
+
+	def can_use_timetable(self):
+		from core.models import Apps
+		return self._can_use_app(Apps.TimeTableApp)
+
+	def _can_use_app(self, app):
+		from core.models import Subscription
+		return Subscription.objects.filter(app__iexact=app, family=self,
+		                                   expiry_date__gt=timezone.now().date()).exists()
 
 
 class FamilyTempData(models.Model):

@@ -18,7 +18,7 @@ class SubscriptionAPI(ModelViewSet):
 	                              description=f"sort by app: {', '.join(Apps.values)}")
 
 	def get_queryset(self):
-		return Subscription.objects.filter(family__in=self.request.user.families.objects.all()).order_by("-id")
+		return Subscription.objects.filter(family__in=self.request.user.families.all()).order_by("-id")
 
 	def filter_queryset(self, queryset):
 		app_query = self.request.query_params.get("app")
@@ -29,18 +29,18 @@ class SubscriptionAPI(ModelViewSet):
 			queryset = queryset.filter(family=family_query)
 		return queryset
 
-	@swagger_auto_schema(operation_summary="purchases a new subscription", security=[{}],
+	@swagger_auto_schema(operation_summary="purchases a new subscription", 
 	                     tags=["app subscription", ],
 	                     request_body=BuySubscriptionSerializer)
 	def create(self, request, *args, **kwargs):
 		self.serializer_class = BuySubscriptionSerializer
 		return super(SubscriptionAPI, self).create(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="retrieves a subscription", security=[{}], tags=["app subscription", ], )
+	@swagger_auto_schema(operation_summary="retrieves a subscription",  tags=["app subscription", ], )
 	def retrieve(self, request, *args, **kwargs):
 		return super(SubscriptionAPI, self).retrieve(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="retrieves all subscriptions", security=[{}],
+	@swagger_auto_schema(operation_summary="retrieves all subscriptions", 
 	                     manual_parameters=[app_query, family_query],
 	                     tags=["app subscription", ], )
 	def list(self, request, *args, **kwargs):

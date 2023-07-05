@@ -9,6 +9,7 @@ admin.site.register(UserRole)
 
 admin.site.register(Family)
 admin.site.register(FamilyTempData)
+admin.site.register(Subscription)
 
 admin.site.register(Pipeline)
 admin.site.register(Stage)

@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.serializers.user import UserSerializer
 from core.utilities.api_response import SuccessResponse, FailureResponse
-from core.models import Family, User
+from core.models import Family, User, UserRole
 from core.serializers.family import FamilySignupSerializer, FamilySerializer, FamilyVerificationSerializer, \
 	FamilyInviteSerializer, AcceptFamilyInviteSerializer, AuthAcceptFamilyInviteSerializer, CreateFamilySerializer
 from core.utilities.utils import get_family
@@ -30,8 +30,9 @@ class FamilyAPI(ModelViewSet):
 	def retrieve(self, request, *args, **kwargs):
 		return super(FamilyAPI, self).retrieve(request, *args, **kwargs)
 
-	@swagger_auto_schema(operation_summary="updates a single user's family", )
+	@swagger_auto_schema(operation_summary="updates a single user's family", request_body=CreateFamilySerializer)
 	def partial_update(self, request, *args, **kwargs):
+		self.serializer_class = CreateFamilySerializer
 		return super(FamilyAPI, self).partial_update(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="deletes a single user's family", )
@@ -61,6 +62,7 @@ class FamilyAPI(ModelViewSet):
 			if user:
 				user.families.remove(family)
 				user.save()
+				UserRole.objects.filter(role__family=family, user=user).delete()
 		return SuccessResponse(message=f"Family member{'s' if len(request.data) > 1 else ''} disowned successfully")
 
 	@swagger_auto_schema(request_body=CreateFamilySerializer,

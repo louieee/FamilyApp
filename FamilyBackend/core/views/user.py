@@ -96,7 +96,7 @@ class ResetPasswordAPI(APIView):
 	def post(self, request, *args, **kwargs):
 		if not self.verify_hash_code(kwargs.get("hash_code")):
 			return FailureResponse(message="This link is either invalid or has expired")
-		serializer = ResetPasswordSerializer(data=request.data)
+		serializer = ResetPasswordSerializer(data=request.data, context={"hash_code": kwargs.get("hash_code")})
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		return SuccessResponse(message="Your password has been reset")
@@ -106,16 +106,18 @@ class UserAPI(APIView):
 	http_method_names = ("patch", "get")
 	permission_classes = (IsAuthenticated,)
 
+
+
 	@swagger_auto_schema(operation_summary="retrieves a logged in user's details")
 	def get(self, request, *args, **kwargs):
-		data = UserSerializer(request.user).data
+		data = UserSerializer(request.user, context={"family": Family.objects.get(username=get_family(request))}).data
 		return SuccessResponse(data=data)
 
 	@swagger_auto_schema(operation_summary="updates a logged in user's details",
-	                     security=[{}],
 	                     request_body=UserSerializer, responses={200: UserSerializer()})
 	def patch(self, request, *args, **kwargs):
-		serializer = UserSerializer(data=request.data)
+		serializer = UserSerializer(data=request.data, partial=True, instance=request.user,
+		                            context={"family": Family.objects.get(username=get_family(request))})
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		return SuccessResponse(data=serializer.data, message="Profile updated successfully")
@@ -145,7 +147,7 @@ class ChangePasswordAPI(APIView):
 	@swagger_auto_schema(operation_summary="allows a user to change their password",
 	                     request_body=ChangePasswordSerializer)
 	def post(self, request, *args, **kwargs):
-		serializer = ChangePasswordSerializer(data=request.data, context={"user", request.user})
+		serializer = ChangePasswordSerializer(data=request.data, context={"user": request.user})
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
-		return FailureResponse(message="Password changed successfully")
+		return SuccessResponse(message="Password changed successfully")

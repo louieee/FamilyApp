@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.utils import timezone
 
 
 class Apps(models.TextChoices):
@@ -17,3 +18,8 @@ class Subscription(models.Model):
 	start_date = models.DateField(default=None, null=True)
 	expiry_date = models.DateField(default=None, null=True)
 	activation_expiry = models.DateTimeField(default=None, null=True)
+
+	def expired(self):
+		if self.expiry_date:
+			return self.expiry_date < timezone.now().date()
+		return None

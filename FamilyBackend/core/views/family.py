@@ -88,7 +88,8 @@ class FamilyAPI(ModelViewSet):
 	@swagger_auto_schema(request_body=AcceptFamilyInviteSerializer,
 	                     operation_summary="accepts a family member invitation",
 	                     )
-	@action(methods=["post"], detail=False, url_name="accept-invite", url_path="accept-invite")
+	@action(methods=["post"], detail=False, url_name="accept-invite",
+	        url_path="accept-invite", permission_classes=[AllowAny, ])
 	def accept_invite(self, request, *args, **kwargs):
 		serializer = AcceptFamilyInviteSerializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
@@ -100,7 +101,7 @@ class FamilyAPI(ModelViewSet):
 	                     )
 	@action(methods=["post"], detail=False, url_name="accept-invite-auth", url_path="accept-invite-auth")
 	def accept_invite_auth(self, request, *args, **kwargs):
-		serializer = AuthAcceptFamilyInviteSerializer(data=request.data)
+		serializer = AuthAcceptFamilyInviteSerializer(data=request.data, context={"user": request.user})
 		serializer.is_valid(raise_exception=True)
 		serializer.save()
 		return SuccessResponse(message="Invite accepted successfully")

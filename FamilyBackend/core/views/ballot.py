@@ -5,10 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.viewsets import ModelViewSet
 
-from core.models import VotingSession, Position, Aspirant, Family
+from core.models import VotingSession, Position, Aspirant, Family, User
 from core.serializers.ballot import VotingSessionSerializer, CreateVotingSessionSerializer, PositionSerializer, \
 	CreateAspirantSerializer, AspirantSerializer
-from core.utilities.api_response import SuccessResponse
+from core.utilities.api_response import SuccessResponse, FailureResponse
+from core.utilities.utils import get_family
 
 
 class CanUseBallot(BasePermission):
@@ -24,6 +25,15 @@ class VotingSessionAPI(ModelViewSet):
 	serializer_class = VotingSessionSerializer
 	http_method_names = ("get", "post", "patch", "delete")
 	permission_classes = (IsAuthenticated, CanUseBallot)
+
+	def get_queryset(self):
+		return VotingSession.objects.filter(family__user=self.request.user,
+		                                    family__username__iexact=get_family(self.request))
+
+	def get_serializer_context(self):
+		data = super(VotingSessionAPI, self).get_serializer_context()
+		data['family'] = Family.objects.get(username__iexact=get_family(self.request))
+		return data
 
 	@swagger_auto_schema(request_body=CreateVotingSessionSerializer,
 	                     operation_summary="creates a voting session", tags=['ballot', ]
@@ -54,44 +64,11 @@ class VotingSessionAPI(ModelViewSet):
 	def destroy(self, request, *args, **kwargs):
 		return super(VotingSessionAPI, self).destroy(request, *args, **kwargs)
 
-	@swagger_auto_schema(request_body=CreateAspirantSerializer,
-	                     operation_summary="adds an aspirant", tags=['ballot', ]
-	                     )
-	@action(methods=["post", ], detail=True, url_path="positions/<int:position_id>/aspirants", url_name="add-aspirant")
-	def add_aspirant(self, request, *args, **kwargs):
-		position = Position.objects.get(id=kwargs.get("position_id"))
-		serializer = CreateAspirantSerializer(data=request.data, context={"session": self.get_object(),
-		                                                                  "position": position})
-		serializer.is_valid(raise_exception=True)
-		aspirant = serializer.save()
-		return SuccessResponse(message="Aspirant has been added", data=AspirantSerializer(aspirant).data)
-
-	@swagger_auto_schema(operation_summary="removes an aspirants from a voting session", tags=['ballot', ]
-	                     )
-	@action(methods=["delete", ], detail=False,
-	        url_path="aspirants/<int:aspirant_id>",
-	        url_name="delete-aspirant")
-	def remove_aspirant(self, request, *args, **kwargs):
-		aspirant = Aspirant.objects.get(id=kwargs.get("aspirant_id"))
-		aspirant.delete()
-		return SuccessResponse(message="Aspirant removed successfully")
-
-	@swagger_auto_schema(operation_summary="votes for an aspirant", tags=['ballot', ])
-	@action(methods=["post", ], detail=False,
-	        url_path="aspirants/<int:aspirant_id>/vote",
-	        url_name="vote-aspirant")
-	def vote(self, request, *args, **kwargs):
-		aspirant = Aspirant.objects.get(id=kwargs.get("aspirant_id"))
-		aspirant.votes.add(request.user)
-		aspirant.save()
-		data = AspirantSerializer(aspirant).data
-		return SuccessResponse(message="Voted successfully", data=data)
-
 
 class AspirantAPI(ModelViewSet):
 	queryset = Aspirant.objects.all()
 	serializer_class = AspirantSerializer
-	http_method_names = ("get",)
+	http_method_names = ("post", "get", "delete")
 	permission_classes = (IsAuthenticated, CanUseBallot)
 
 	position_query = openapi.Parameter("position", in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER,
@@ -101,13 +78,19 @@ class AspirantAPI(ModelViewSet):
 	                                 type=openapi.TYPE_STRING)
 
 	def get_queryset(self):
-		position = self.request.query_params.get("position")
-		if position:
-			return self.queryset.filter(position_id=position)
-		return super(AspirantAPI, self).get_queryset()
+		return Aspirant.objects.filter(position__family__username__iexact=get_family(self.request),
+		                               position__family__user=self.request.user)
+
+	def get_serializer_context(self):
+		data = super(AspirantAPI, self).get_serializer_context()
+		data['family'] = Family.objects.get(username__iexact=get_family(self.request))
+		return data
 
 	def filter_queryset(self, queryset):
+		position = self.request.query_params.get("position")
 		search = self.request.query_params.get("search")
+		if position:
+			queryset = queryset.filter(position_id=position)
 		if search:
 			queryset = queryset.filter(Q(user__first_name__icontains=search) | Q(user__last_name__icontains=search)
 			                           | Q(user__email__icontains=search))
@@ -122,6 +105,34 @@ class AspirantAPI(ModelViewSet):
 	def retrieve(self, request, *args, **kwargs):
 		return super(AspirantAPI, self).retrieve(request, *args, **kwargs)
 
+	@swagger_auto_schema(request_body=CreateAspirantSerializer,
+	                     operation_summary="adds an aspirant", tags=['ballot', ]
+	                     )
+	def create(self, request, *args, **kwargs):
+		self.serializer_class = CreateAspirantSerializer
+		return super(AspirantAPI, self).create(request, *args, **kwargs)
+
+	@swagger_auto_schema(operation_summary="removes an aspirants from a voting session", tags=['ballot', ]
+	                     )
+	def destroy(self, request, *args, **kwargs):
+		return super(AspirantAPI, self).destroy(self, request, *args, **kwargs)
+
+	@swagger_auto_schema(operation_summary="votes for an aspirant", tags=['ballot', ])
+	@action(methods=["post", ], detail=True,
+	        url_path="vote",
+	        url_name="vote-aspirant")
+	def vote(self, request, *args, **kwargs):
+		aspirant = self.get_object()
+		if not aspirant.session.can_vote():
+			return FailureResponse(message="Voting session is inactive")
+		if User.objects.filter(votes__user_id=request.user, aspirant__position=aspirant.position,
+		                    aspirant__session=aspirant.session).exists():
+			return FailureResponse(message="You have voted already")
+		aspirant.votes.add(request.user)
+		aspirant.save()
+		data = AspirantSerializer(aspirant).data
+		return SuccessResponse(message="Voted successfully", data=data)
+
 
 class PositionAPI(ModelViewSet):
 	queryset = Position.objects.all()
@@ -131,11 +142,28 @@ class PositionAPI(ModelViewSet):
 
 	search_query = openapi.Parameter(name="search", in_=openapi.IN_QUERY, description="search position",
 	                                 type=openapi.TYPE_STRING)
+	session_query = openapi.Parameter(name="session", in_=openapi.IN_QUERY, description="session query",
+	                                  type=openapi.TYPE_NUMBER)
+
+	def get_queryset(self):
+		return Position.objects.filter(family__username__iexact=get_family(self.request),
+		                               family__user=self.request.user)
+
+	def get_serializer_context(self):
+		data = super(PositionAPI, self).get_serializer_context()
+		data['family'] = Family.objects.get(username__iexact=get_family(self.request))
+		session = self.request.query_params.get("session")
+		if session:
+			data['session'] = VotingSession.objects.get(id=session)
+		return data
 
 	def filter_queryset(self, queryset):
+		session = self.request.query_params.get("session")
 		search = self.request.query_params.get("search")
 		if search:
 			queryset = queryset.filter(title__icontains=search)
+		if session:
+			queryset = Position.objects.filter(aspirant__session_id=session).distinct()
 		return queryset
 
 	@swagger_auto_schema(request_body=PositionSerializer,
@@ -150,7 +178,7 @@ class PositionAPI(ModelViewSet):
 		return super(PositionAPI, self).retrieve(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a list of positions", tags=['ballot', ],
-	                     manual_parameters=[search_query, ]
+	                     manual_parameters=[search_query, session_query]
 	                     )
 	def list(self, request, *args, **kwargs):
 		return super(PositionAPI, self).list(request, *args, **kwargs)

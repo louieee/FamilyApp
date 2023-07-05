@@ -5,7 +5,7 @@ from ..views import ballot
 
 app_name = "ballot"
 router = SimpleRouter()
-router.register("", ballot.VotingSessionAPI, basename="ballot")
+router.register("session", ballot.VotingSessionAPI, basename="ballot")
 router.register("positions", ballot.PositionAPI, basename="positions")
 router.register("aspirants", ballot.AspirantAPI, basename="aspirants")
 

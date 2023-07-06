@@ -74,10 +74,10 @@ class Task(models.Model):
 		self.end_time = timezone.now() + duration
 		self.save()
 
-	def remind_creator(self):
+	def remind_creator(self, start=False):
 		...
 
-	def remind_assignees(self):
+	def remind_assignees(self, start=False):
 		...
 
 	def notify(self):

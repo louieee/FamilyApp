@@ -1,0 +1,10 @@
+
+Hello {{user}},
+This email is to notify you that you have been removed as
+a member of the "{{family}}" family. Hereby, You will no
+longer have access to the family dashboard or any activities
+concerning this family.
+
+Yours Sincerly,
+{{creator}}
+Creator of {{family}}.

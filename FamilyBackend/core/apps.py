@@ -8,3 +8,4 @@ class CoreConfig(AppConfig):
     def ready(self):
         import core.signals.timetable  # noqa
         import core.signals.scheduler # noqa
+        import core.signals.subscription # noqa

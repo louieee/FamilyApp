@@ -1,0 +1,11 @@
+
+
+Hello {{user}},
+This is to inform you that your subscription
+with the transaction ID {{txn_id}} has expired
+and therefore if you do not have another active
+subscription for the app {{app}}, you will no
+longer have access to the {{app}}.
+
+Yours Sincerely,
+Family App Team.

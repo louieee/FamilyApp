@@ -32,49 +32,49 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",
-    "channels",
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "drf_yasg",
-    "django_celery_beat",
-    "rest_framework",
-    "rest_framework_simplejwt",
-    "FamilyBackend",
-    "core"
-    # "core"
+	"daphne",
+	"channels",
+	"django.contrib.admin",
+	"django.contrib.auth",
+	"django.contrib.contenttypes",
+	"django.contrib.sessions",
+	"django.contrib.messages",
+	"django.contrib.staticfiles",
+	"drf_yasg",
+	"django_celery_beat",
+	"rest_framework",
+	"rest_framework_simplejwt",
+	"FamilyBackend",
+	"core"
+	# "core"
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+	"django.middleware.security.SecurityMiddleware",
+	"django.contrib.sessions.middleware.SessionMiddleware",
+	"django.middleware.common.CommonMiddleware",
+	"django.middleware.csrf.CsrfViewMiddleware",
+	"django.contrib.auth.middleware.AuthenticationMiddleware",
+	"django.contrib.messages.middleware.MessageMiddleware",
+	"django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
 ROOT_URLCONF = "FamilyBackend.urls"
 
 TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.debug",
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
+	{
+		"BACKEND": "django.template.backends.django.DjangoTemplates",
+		"DIRS": [BASE_DIR / "templates"],
+		"APP_DIRS": True,
+		"OPTIONS": {
+			"context_processors": [
+				"django.template.context_processors.debug",
+				"django.template.context_processors.request",
+				"django.contrib.auth.context_processors.auth",
+				"django.contrib.messages.context_processors.messages",
+			],
+		},
+	},
 ]
 
 WSGI_APPLICATION = "FamilyBackend.wsgi.application"
@@ -84,28 +84,28 @@ ASGI_APPLICATION = "FamilyBackend.asgi.application"
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db.sqlite3",
-    }
+	"default": {
+		"ENGINE": "django.db.backends.sqlite3",
+		"NAME": "db.sqlite3",
+	}
 }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+	{
+		"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+	},
+	{
+		"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+	},
+	{
+		"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+	},
+	{
+		"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+	},
 ]
 
 # Internationalization
@@ -129,49 +129,49 @@ STATIC_URL = "/static/"
 AUTH_USER_MODEL = "core.User"
 
 SWAGGER_SETTINGS = {
-    # "DEFAULT_AUTO_SCHEMA_CLASS": "apps.api.inspectors.SwaggerAutoSchema",
-    "USE_SESSION_AUTH": False,
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
-        "Family": {"type": "apiKey", "name": "Family", "in": "header"},
-    },
+	# "DEFAULT_AUTO_SCHEMA_CLASS": "apps.api.inspectors.SwaggerAutoSchema",
+	"USE_SESSION_AUTH": False,
+	"SECURITY_DEFINITIONS": {
+		"Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"},
+		"Family": {"type": "apiKey", "name": "Family", "in": "header"},
+	},
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 20,
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_RENDERER_CLASSES": ("core.utilities.api_response.CustomJSONRenderer",),
+	"DEFAULT_AUTHENTICATION_CLASSES": (
+		"rest_framework_simplejwt.authentication.JWTAuthentication",
+	),
+	"DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+	"PAGE_SIZE": 20,
+	"DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+	"DEFAULT_RENDERER_CLASSES": ("core.utilities.api_response.CustomJSONRenderer",),
 }
 
 # simple jwt settings
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+	"ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+	"REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [f"redis://@localhost:6379/1"],
-        },
-    },
+	"default": {
+		"BACKEND": "channels_redis.core.RedisChannelLayer",
+		"CONFIG": {
+			"hosts": [f"redis://@localhost:6379/1"],
+		},
+	},
 }
 CHANNEL_LAYERS["default"]["MIDDLEWARE"] = [
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "channels.middleware.http.HttpConsumerMiddleware",
-    "channels.middleware.auth.AuthMiddlewareStack",
+	"django.contrib.auth.middleware.AuthenticationMiddleware",
+	"django.contrib.sessions.middleware.SessionMiddleware",
+	"django.middleware.common.CommonMiddleware",
+	"channels.middleware.http.HttpConsumerMiddleware",
+	"channels.middleware.auth.AuthMiddlewareStack",
 ]
 
 # celery settings
 if USE_TZ:
-    CELERY_TIMEZONE = TIME_ZONE
+	CELERY_TIMEZONE = TIME_ZONE
 # CELERY_BROKER_URL = f"redis://:{config('REDIS_PASSWORD', 'redis')}@redis:6379/2"
 # CELERY_RESULT_BACKEND = f"redis://:{config('REDIS_PASSWORD', 'redis')}@redis:6379/3"
 CELERY_BROKER_URL = f"redis://@localhost:6379/2"
@@ -183,9 +183,9 @@ CELERY_TASK_TIME_LIMIT = 5 * 60
 CELERY_TASK_SOFT_TIME_LIMIT = 60
 
 EMAIL_BACKEND = config('EMAIL_BACKEND', "django.core.mail.backends.console.EmailBackend")
-# EMAIL_HOST = 'smtp.office365.com'
-# EMAIL_PORT = 587
-# EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-# EMAIL_USE_TLS = True
-# DEFAULT_FROM_EMAIL = f'Family App Team <{EMAIL_HOST_USER}>'
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = f'Family App Team <{EMAIL_HOST_USER}>'

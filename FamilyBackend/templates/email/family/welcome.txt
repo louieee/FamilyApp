@@ -1,0 +1,11 @@
+
+Hello {{user}},
+Welcome to the "{{family}}" Family. Today,
+you have become a verified member of this
+family. You can now proceed to updating your
+details and engaging in other activities. You're
+welcomed once again.
+
+Yours Sincerely,
+{{creator}},
+Creator of {{family}}

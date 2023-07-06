@@ -1,0 +1,14 @@
+
+
+Hello {{first_name}} {{last_name}},
+You recently created a new family, this is an
+email to verify your email address before you
+continue on the family creation setup. Please
+click the link below to continue.
+
+{{base_url}}/verify-email/{{code}}/
+
+Kindly note that this link will expire within the next 24 hours.
+
+Yours Sincerely,
+Family App Team.

@@ -1,0 +1,14 @@
+
+
+Hello {{first_name}} {{last_name}},
+You have been invited to join the {{family}} on this
+platform. You can click the link below to continue
+the creation of your account.
+{{base_url}}/family-invite/{{code}}/
+
+Kindly note that this link will expire in the next 24 hours.
+We await you!
+
+Yours Sincerely,
+{{family}}.
+

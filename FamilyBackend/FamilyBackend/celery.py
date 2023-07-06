@@ -37,7 +37,10 @@ def setup_periodic_tasks(sender, **kwargs):
 	sender.add_periodic_task(crontab(minute="*"), family.clear_expired_temp_data.s(), name="clear_temp_data")
 
 	sender.add_periodic_task(crontab(minute="*"), subscription.delete_unpaid_subs.s(), name="clear_unpaid_subs")
-
+	sender.add_periodic_task(crontab(minute="*"), subscription.notify_3_wks_before.s(), name="remind_expiry_3_wks")
+	sender.add_periodic_task(crontab(minute="*"), subscription.notify_2_wks_before.s(), name="remind_expiry_2_wks")
+	sender.add_periodic_task(crontab(minute="*"), subscription.notify_1_wk_before.s(), name="remind_expiry_1_wk")
+	sender.add_periodic_task(crontab(minute="*"), subscription.notify_expiry.s(), name="notify_expiry")
 
 @app.task(bind=True)
 def debug_task(self):

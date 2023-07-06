@@ -1,0 +1,10 @@
+
+
+Hello {{user}},
+This is a subtle reminder of the task that you are supposed
+to do and is set to commence at {{start_time}}. The title of
+the task is {{task_title}}, here are the details of the task:
+{{task_description}}
+
+Yours Sincerely,
+{{family}}.

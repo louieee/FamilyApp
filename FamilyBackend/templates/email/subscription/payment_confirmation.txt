@@ -1,0 +1,15 @@
+
+
+Hello {{user}},
+Your payment for the subscription of the {{app}}
+have been confirmed. You can now access the
+{{app}}. The details of your transaction are:
+App: {{app}}
+Duration: {{duration}} months.
+You have paid the amount of
+{{price}}. Once the payment is confirmed, we will
+activate your subscription and you will have access
+to use the {{app}}.
+
+Yours Sincerely,
+Family App Team.

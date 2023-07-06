@@ -1,0 +1,9 @@
+
+
+Hello {{user}},
+This is to inform you that your subscription
+to the {{app}} with the transaction ID {{txn_id}} will be
+expired in the next  {{days}} days.
+
+Yours Sincerely,
+Family App Team.

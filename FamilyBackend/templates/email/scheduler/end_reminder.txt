@@ -1,0 +1,11 @@
+
+
+Hello {{user}},
+This is a subtle reminder of the task that you are supposed
+to have started on. You are expected to be rounding up on this
+task as it is set to end on {{end_time}}. The title of
+the task is {{task_title}}, here are the details of the task:
+{{task_description}}
+
+Yours Sincerely,
+{{family}}.

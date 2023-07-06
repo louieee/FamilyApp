@@ -1,0 +1,11 @@
+
+
+Hello {{user}},
+You have recently subscribed for the  {{app}}, for
+{{duration}} months. You have paid the amount of
+{{price}}. Once the payment is confirmed, we will
+activate your subscription and you will have access
+to use the {{app}}.
+
+Yours Sincerely,
+Family App Team.

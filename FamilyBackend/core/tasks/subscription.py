@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 import django
 from celery import shared_task
@@ -16,3 +17,44 @@ def delete_unpaid_subs():
 	                            activation_expiry__month=now.month, activation_expiry__year=now.year,
 	                            activation_expiry__hour=now.hour, activation_expiry__minute=now.minute).delete()
 	return
+
+
+def notify_end(now):
+	subscriptions = Subscription.objects.filter(expiry_date__day=now.day, expiry_date__month=now.month,
+	                                            expiry_date__year=now.year, expiry_date__hour=now.hour,
+	                                            exppiry_date__minute=now.minute)
+	for sub in subscriptions:
+		sub.send_expiry_reminder()
+	return subscriptions.count()
+
+
+@shared_task
+def notify_3_wks_before():
+	now = timezone.now() + timedelta(days=21)
+	notify_end(now)
+	return
+
+
+@shared_task
+def notify_2_wks_before():
+	now = timezone.now() + timedelta(days=14)
+	notify_end(now)
+	return
+
+
+@shared_task
+def notify_1_wk_before():
+	now = timezone.now() + timedelta(days=7)
+	notify_end(now)
+	return
+
+
+@shared_task
+def notify_expiry():
+	now = timezone.now()
+	subscriptions = Subscription.objects.filter(expiry_date__day=now.day, expiry_date__month=now.month,
+	                                            expiry_date__year=now.year, expiry_date__hour=now.hour,
+	                                            exppiry_date__minute=now.minute)
+	for sub in subscriptions:
+		sub.send_expiry_email()
+	return subscriptions.count()

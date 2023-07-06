@@ -22,6 +22,36 @@ class Stage(models.Model):
 	next_stage = models.ForeignKey("Stage", on_delete=models.SET_NULL, null=True, default=None)
 	pipeline = models.ForeignKey("Pipeline", on_delete=models.CASCADE)
 
+	@staticmethod
+	def rearrange(stage_ids):
+		curr = Stage.objects.filter(id=stage_ids[0]).first()
+		index = 0
+		while index < len(stage_ids):
+			next_stage = Stage.objects.filter \
+				(id=stage_ids[index + 1]).first() if index + 1 < len(
+				stage_ids) else None
+			curr.next_stage = next_stage
+			curr.level = index
+			curr.save()
+			curr = next_stage
+			index += 1
+
+	def connect(self):
+		last_stage = Stage.objects.filter(pipeline=self.pipeline).order_by("level").exclude(id=self.id).last()
+		if last_stage:
+			last_stage.next_stage = self
+			last_stage.save()
+		self.level = (last_stage.level + 1) if last_stage else 0
+		self.save()
+
+	def disconnect(self):
+		previous_stage = Stage.objects.filter(next_stage=self).first()
+		next_stage = self.next_stage
+		if previous_stage:
+			previous_stage.next_row = next_stage
+			previous_stage.save()
+		return
+
 
 class Task(models.Model):
 	title = models.CharField(max_length=200)
@@ -52,4 +82,3 @@ class Task(models.Model):
 
 	def notify(self):
 		...
-

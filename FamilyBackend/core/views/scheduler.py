@@ -57,6 +57,7 @@ class PipelineAPI(ModelViewSet):
 	@swagger_auto_schema(operation_summary="deletes a pipeline", tags=["scheduler", ],
 	                     )
 	def destroy(self, request, *args, **kwargs):
+		self.get_object().disconnect()
 		return super(PipelineAPI, self).destroy(request, *args, **kwargs)
 
 	@swagger_auto_schema(
@@ -64,7 +65,7 @@ class PipelineAPI(ModelViewSet):
 			type=openapi.TYPE_ARRAY,
 			items=openapi.Schema(type=openapi.TYPE_INTEGER),
 			example=[1, 2, 3],
-			description="user IDs of the stages"
+			description="IDs of the stages"
 		),
 
 		operation_summary="re-arrange stages in a pipeline",
@@ -78,15 +79,7 @@ class PipelineAPI(ModelViewSet):
 		pipeline = self.get_object()
 		if pipeline.creator != request.user:
 			return FailureResponse(message="You cannot perform this action")
-		curr = Stage.objects.filter(id=request.data[0]).first()
-		index = 0
-		while index < len(request.data):
-			next_stage = Stage.objects.filter(id=request.data[index+1]).first() if index + 1 < len(request.data) else None
-			curr.next_stage = next_stage
-			curr.level = index
-			curr.save()
-			curr = next_stage
-			index+=1
+		Stage.rearrange(request.data)
 		stages = Stage.objects.filter(pipeline=pipeline).order_by('level')
 		return SuccessResponse(message=f"stages have been rearranged successfully",
 		                       data=StageSerializer(stages, many=True).data)

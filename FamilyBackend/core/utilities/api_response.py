@@ -43,7 +43,9 @@ class CustomJSONRenderer(JSONRenderer):
         status = True if status_code < 400 else False
         message = "successful" if status else "failed"
         # when response data is a list, convert to dict
-        if type(list(data.values())[0]) == str:
+        if data is None:
+            data = {"status": status, "message": message, "data": data}
+        elif type(list(data.values())[0]) == str:
             data = {"status": status, "message": message, "data": data}
         elif type(data) == utils.serializer_helpers.ReturnDict:
             try:

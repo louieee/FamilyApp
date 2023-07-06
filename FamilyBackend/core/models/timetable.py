@@ -28,9 +28,42 @@ class TimeTable(models.Model):
 class Row(models.Model):
 	title = models.CharField(max_length=100)
 	timetable = models.ForeignKey("TimeTable", on_delete=models.CASCADE)
+	next_row = models.ForeignKey("Row", on_delete=models.SET_NULL, null=True)
+	level = models.PositiveSmallIntegerField(default=None, null=True)
 
 	def items(self):
 		return Item.objects.filter(row=self)
+
+	@staticmethod
+	def rearrange(ids):
+		curr = Row.objects.filter(id=ids[0]).first()
+		index = 0
+		while index < len(ids):
+			next_row = Row.objects.filter \
+				(id=ids[index + 1]).first() if index + 1 < len(
+				ids) else None
+			curr.next_row = next_row
+			curr.level = index
+			curr.save()
+			curr = next_row
+			index += 1
+
+	def connect(self):
+		last_row = Row.objects.filter(timetable=self.timetable). \
+			order_by("level").exclude(id=self.id).last()
+		if last_row:
+			last_row.next_row = self
+			last_row.save()
+		self.level = (last_row.level + 1) if last_row else 0
+		self.save()
+
+	def disconnect(self):
+		previous_row = Row.objects.filter(next_row=self).first()
+		next_row = self.next_row
+		if previous_row:
+			previous_row.next_row = next_row
+			previous_row.save()
+		return
 
 
 class Column(models.Model):
@@ -38,6 +71,41 @@ class Column(models.Model):
 	start_time = models.DateTimeField(default=None, null=True)
 	end_time = models.DateTimeField(default=None, null=True)
 	timetable = models.ForeignKey("TimeTable", on_delete=models.CASCADE)
+	next_column = models.ForeignKey("Column", on_delete=models.SET_NULL, null=True)
+	level = models.PositiveSmallIntegerField(default=None, null=True)
+
+	@staticmethod
+	def rearrange(ids):
+		curr = Column.objects.filter(id=ids[0]).first()
+		index = 0
+		while index < len(ids):
+			next_column = Column.objects.filter \
+				(id=ids[index + 1]).first() if index + 1 < len(
+				ids) else None
+			curr.next_column = next_column
+			curr.level = index
+			curr.save()
+			curr = next_column
+			index += 1
+		return
+
+	def connect(self):
+		last_column = Column.objects.filter(timetable=self.timetable). \
+			order_by("level").exclude(id=self.id).last()
+		if last_column:
+			last_column.next_row = self
+			last_column.save()
+		self.level = (last_column.level + 1) if last_column else 0
+		self.save()
+
+	def disconnect(self):
+		previous_column = Column.objects.filter(next_column=self).first()
+		next_column = self.next_column
+		if previous_column:
+			previous_column.next_column = next_column
+			previous_column.save()
+		return
+
 
 class Item(models.Model):
 	name = models.CharField(max_length=255)

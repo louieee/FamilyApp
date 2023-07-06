@@ -10,9 +10,12 @@ class TimeTableSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = TimeTable
-		exclude = ("creator",)
+		read_only_fields = ("creator", "family")
+		fields = "__all__"
 
 	def validate(self, attrs):
+		attrs['family'] = self.context.get("family")
+		attrs['creator'] = self.context.get("user")
 		family = attrs.get("family")
 		family = self.instance.family if not family and self.instance else family
 		if "title" in attrs and family:
@@ -27,6 +30,7 @@ class RowSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Row
 		fields = "__all__"
+		read_only_fields = ("level", "next_row")
 
 	def validate(self, attrs):
 		timetable = attrs.get("timetable")
@@ -43,6 +47,7 @@ class ColumnSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Column
 		fields = "__all__"
+		read_only_fields = ("level", "next_column")
 
 	def validate(self, attrs):
 		timetable = attrs.get("timetable")

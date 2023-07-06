@@ -1,10 +1,13 @@
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.viewsets import ModelViewSet
 
 from core.models import TimeTable, Row, Column, Item, Family
 from core.serializers.timetable import TimeTableSerializer, RowSerializer, ColumnSerializer, ItemSerializer
+from core.utilities.api_response import FailureResponse, SuccessResponse
+from core.utilities.utils import get_family
 
 
 class CanUseTimetable(BasePermission):
@@ -20,6 +23,16 @@ class TimeTableAPI(ModelViewSet):
 	serializer_class = TimeTableSerializer
 	http_method_names = ("post", "get", "patch", "delete")
 	permission_classes = (IsAuthenticated, CanUseTimetable)
+
+	def get_queryset(self):
+		return TimeTable.objects.filter(family__user=self.request.user,
+		                                family__username__iexact=get_family(self.request))
+
+	def get_serializer_context(self):
+		data = super(TimeTableAPI, self).get_serializer_context()
+		data['user'] = self.request.user
+		data['family'] = Family.objects.get(username__iexact=get_family(self.request))
+		return data
 
 	@swagger_auto_schema(operation_summary="creates a timetable", tags=['timetable', ],
 	                     request_body=TimeTableSerializer)
@@ -46,13 +59,61 @@ class TimeTableAPI(ModelViewSet):
 	def destroy(self, request, *args, **kwargs):
 		return super(TimeTableAPI, self).destroy(request, *args, **kwargs)
 
+	@swagger_auto_schema(
+		request_body=openapi.Schema(
+			type=openapi.TYPE_ARRAY,
+			items=openapi.Schema(type=openapi.TYPE_INTEGER),
+			example=[1, 2, 3],
+			description="IDs of the rows"
+		),
+
+		operation_summary="re-arrange rows in a timetable",
+		tags=['timetable', ]
+
+	)
+	@action(detail=True, methods=["post"], url_path="rows/re-arrange", url_name="arrange-rows")
+	def arrange_rows(self, request, *args, **kwargs):
+		if len(request.data) == 0:
+			return FailureResponse(message="There are no rows to be arranged")
+		timetable = self.get_object()
+		if timetable.creator != request.user:
+			return FailureResponse(message="You cannot perform this action")
+		Row.rearrange(request.data)
+		rows = Row.objects.filter(timetable=timetable).order_by('level')
+		return SuccessResponse(message=f"Rows have been rearranged successfully",
+		                       data=RowSerializer(rows, many=True).data)
+
+	@swagger_auto_schema(
+		request_body=openapi.Schema(
+			type=openapi.TYPE_ARRAY,
+			items=openapi.Schema(type=openapi.TYPE_INTEGER),
+			example=[1, 2, 3],
+			description="IDs of the columns"
+		),
+
+		operation_summary="re-arrange columns in a timetable",
+		tags=['timetable', ]
+
+	)
+	@action(detail=True, methods=["post"], url_path="columns/re-arrange", url_name="arrange-columns")
+	def arrange_columns(self, request, *args, **kwargs):
+		if len(request.data) == 0:
+			return FailureResponse(message="There are no columns to be arranged")
+		timetable = self.get_object()
+		if timetable.creator != request.user:
+			return FailureResponse(message="You cannot perform this action")
+		Column.rearrange(request.data)
+		columns = Column.objects.filter(timetable=timetable).order_by('level')
+		return SuccessResponse(message=f"Columns have been rearranged successfully",
+		                       data=ColumnSerializer(columns, many=True).data)
+
 
 timetable_query = openapi.Parameter("timetable", in_=openapi.IN_QUERY, description="timetable ID",
                                     type=openapi.TYPE_NUMBER, required=True)
 
 
 class RowAPI(ModelViewSet):
-	queryset = Row.objects.all()
+	queryset = Row.objects.order_by("level")
 	serializer_class = RowSerializer
 	http_method_names = ("post", "get", "patch", "delete")
 	permission_classes = (IsAuthenticated, CanUseTimetable)
@@ -79,6 +140,7 @@ class RowAPI(ModelViewSet):
 		return super(RowAPI, self).retrieve(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a list of rows", tags=['timetable', ],
+	                     manual_parameters=[timetable_query, ]
 	                     )
 	def list(self, request, *args, **kwargs):
 		return super(RowAPI, self).list(request, *args, **kwargs)
@@ -86,11 +148,12 @@ class RowAPI(ModelViewSet):
 	@swagger_auto_schema(operation_summary="deletes a row", tags=["timetable", ],
 	                     )
 	def destroy(self, request, *args, **kwargs):
+		self.get_object().disconnect()
 		return super(RowAPI, self).destroy(request, *args, **kwargs)
 
 
 class ColumnAPI(ModelViewSet):
-	queryset = Column.objects.all()
+	queryset = Column.objects.order_by("level")
 	http_method_names = ("post", "get", "patch", "delete")
 	serializer_class = ColumnSerializer
 	permission_classes = (IsAuthenticated, CanUseTimetable)
@@ -117,6 +180,7 @@ class ColumnAPI(ModelViewSet):
 		return super(ColumnAPI, self).retrieve(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a list of columns", tags=['timetable', ],
+	                     manual_parameters=[timetable_query, ]
 	                     )
 	def list(self, request, *args, **kwargs):
 		return super(ColumnAPI, self).list(request, *args, **kwargs)
@@ -124,6 +188,7 @@ class ColumnAPI(ModelViewSet):
 	@swagger_auto_schema(operation_summary="deletes a column", tags=["timetable", ],
 	                     )
 	def destroy(self, request, *args, **kwargs):
+		self.get_object().disconnect()
 		return super(ColumnAPI, self).destroy(request, *args, **kwargs)
 
 
@@ -158,6 +223,7 @@ class ItemAPI(ModelViewSet):
 		return super(ItemAPI, self).retrieve(request, *args, **kwargs)
 
 	@swagger_auto_schema(operation_summary="retrieves a list of items", tags=['timetable', ],
+	                     manual_parameters=[row_query, ]
 	                     )
 	def list(self, request, *args, **kwargs):
 		return super(ItemAPI, self).list(request, *args, **kwargs)

@@ -28,6 +28,9 @@ class User(AbstractUser):
 	def get_role(self, family):
 		return UserRole.objects.filter(role__family=family, user=self).first()
 
+	def __str__(self):
+		return self.get_full_name()
+
 
 class UserRole(models.Model):
 	user = models.ForeignKey("core.User", on_delete=models.CASCADE)

@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from core.models import User, Family, FamilyTempData, FamilyTempDataTypes
 from core.serializers.system import CustomCharField, CustomEmailField
+from core.services.email.family import send_signup_email, send_welcome_email, send_invite_email
 
 
 class FamilySerializer(serializers.ModelSerializer):
@@ -48,10 +49,8 @@ class FamilySignupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         temp_data = FamilyTempData.objects.create(data=validated_data, data_type=FamilyTempDataTypes.SIGNUP,
                                                   expiry_date=(timezone.now() + timedelta(hours=24)))
-        # TODO  more context will be added to this email section
-        print(temp_data.hash_code)
-        EmailMessage(subject="Email Verification", body=temp_data.hash_code, from_email="info@localhost",
-                     to=[validated_data.get("email"), ], )
+        send_signup_email(first_name=validated_data['first_name'], last_name=validated_data['last_name'],
+                          code=temp_data.hash_code, email=validated_data['email'])
         return temp_data
 
 
@@ -133,18 +132,13 @@ class FamilyInviteSerializer(serializers.Serializer):
             temp_data = FamilyTempData.objects.create(family=family, data=validated_data,
                                                       data_type=FamilyTempDataTypes.INVITE,
                                                       expiry_date=(timezone.now() + timedelta(hours=24)))
-            print(temp_data.hash_code)
-            # TODO  more context will be added to this email section
-            EmailMessage(subject=f"{family.name} Family Membership Invitation", body=temp_data.hash_code,
-                         from_email="info@localhost",
-                         to=[validated_data.get("email"), ], )
+            send_invite_email(first_name=validated_data['first_name'],
+                              last_name=validated_data['last_name'],
+                              family=str(family), code=temp_data.hash_code, email=validated_data['email'])
             return temp_data
         user = validated_data.pop("user")
-        # TODO  more context will be added to this email section
-        EmailMessage(subject=f"{family.name} Family Membership Invitation", body=family.identifier,
-                     from_email="info@localhost",
-                     to=[user.email, ], )
-        print(family.identifier)
+        send_invite_email(first_name=user.first_name, last_name=user.last_name,
+                          family=str(family), code=family.identifier, email=user.email)
         return user
 
 
@@ -168,7 +162,10 @@ class AcceptFamilyInviteSerializer(serializers.Serializer):
         user = User.objects.create_user(**validated_data)
         user.families.add(temp.family)
         user.save()
+        family = temp.family
         temp.delete()
+        send_welcome_email(user=str(user), family=str(family), creator=str(family.creator),
+                           email=user.email)
         return user
 
 
@@ -187,4 +184,6 @@ class AuthAcceptFamilyInviteSerializer(serializers.Serializer):
         user = self.context.get("user")
         user.families.add(family)
         user.save()
+        send_welcome_email(user=str(user), family=str(family), creator=str(family.creator),
+                           email=user.email)
         return user

@@ -3,6 +3,9 @@ import uuid
 from django.db import models
 from django.utils import timezone
 
+from core.services.email.subscription import subscription_expiry_reminder, subscription_expired_email, \
+	send_payment_confirmation_email, send_new_subscription_email
+
 
 class Apps(models.TextChoices):
 	BallotApp = ("Ballot App", "Ballot App")
@@ -26,13 +29,26 @@ class Subscription(models.Model):
 		return None
 
 	def send_expiry_reminder(self):
-		...
+		days = (self.expiry_date - timezone.now()).days
+		subscription_expiry_reminder(user=str(self.family.creator),
+		                             txn_id=self.txn_id,
+		                             app=self.app, days=days, email=self.family.creator.email)
+		return
 
 	def send_payment_email(self):
-		...
+		send_new_subscription_email(user=str(self.family.creator),
+		                            app=self.app, duration=self.duration,
+		                            price=self.price, email=self.family.creator.email)
+		return
 
 	def send_expiry_email(self):
-		...
+		subscription_expired_email(app=self.app, user=str(self.family.creator),
+		                           txn_id=self.txn_id, email=self.family.creator.email)
+		return
 
 	def send_activation_email(self):
-		...
+		send_payment_confirmation_email(user=str(self.family.creator),
+		                                app=self.app, duration=self.duration,
+		                                price=self.price, email=self.family.creator.email)
+		return
+

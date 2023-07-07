@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from core.services.email.scheduler import send_start_reminder_email, send_end_reminder_email, send_task_email
+
 
 # Create your models here.
 
@@ -75,10 +77,30 @@ class Task(models.Model):
 		self.save()
 
 	def remind_creator(self, start=False):
-		...
+		if start is True:
+			send_start_reminder_email(start_time=self.start_time.strftime("%d %B %Y at %I:%M%p"),
+			                          task_title=self.title, task_description=self.description,
+			                          email=[self.creator.email, ], family=str(self.stage.pipeline.family))
+			return
+		send_end_reminder_email(end_time=self.end_time.strftime("%d %B %Y at %I:%M%p"),
+		                          task_title=self.title, task_description=self.description,
+		                          email=[self.creator.email, ], family=str(self.stage.pipeline.family))
+		return
 
 	def remind_assignees(self, start=False):
-		...
+		if start is True:
+			send_start_reminder_email(start_time=self.start_time.strftime("%d %B %Y at %I:%M%p"),
+			                          task_title=self.title, task_description=self.description,
+			                          email=list(self.assignees.values_list("email", flat=True)),
+			                          family=str(self.stage.pipeline.family))
+			return
+		send_end_reminder_email(end_time=self.end_time.strftime("%d %B %Y at %I:%M%p"),
+		                        task_title=self.title, task_description=self.description,
+		                        email=list(self.assignees.values_list("email", flat=True)),
+		                        family=str(self.stage.pipeline.family))
+		return
 
 	def notify(self):
-		...
+		send_task_email(task_title=self.title, task_description=self.description,
+		                family=str(self.stage.pipeline.family),
+		                email=list(self.assignees.values_list("email", flat=True)))

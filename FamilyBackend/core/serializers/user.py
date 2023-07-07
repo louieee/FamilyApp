@@ -7,6 +7,7 @@ from rest_framework import serializers
 from core.models import Role, User, FamilyTempData, FamilyTempDataTypes
 from core.serializers.system import CustomCharField, CustomEmailField
 from core.serializers.family import FamilySerializer
+from core.services.email.user import send_forgot_password_email
 from core.utilities.utils import get_access_token
 
 
@@ -40,7 +41,6 @@ class UserSerializer(serializers.ModelSerializer):
 		if "username" in attrs and users.filter(username__iexact=attrs.get("username")).exists():
 			raise serializers.ValidationError("A user with this username already exists")
 		return attrs
-
 
 	class Meta:
 		model = User
@@ -94,9 +94,8 @@ class ForgotPasswordSerializer(serializers.Serializer):
 			return
 		temp = FamilyTempData.objects.create(data=dict(email=user.email), data_type=FamilyTempDataTypes.RESET_PASSWORD,
 		                                     expiry_date=(timezone.now() + timedelta(hours=24)))
-		EmailMessage(subject="Reset Password Request", body=temp.hash_code, from_email="local@host.com",
-		             to=[user.email, ])
-		print(temp.hash_code)
+		send_forgot_password_email(user=str(user), code=temp.hash_code,
+		                           email=user.email)
 		return user
 
 	def update(self, instance, validated_data):

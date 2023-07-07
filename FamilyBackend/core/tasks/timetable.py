@@ -13,15 +13,9 @@ def notify(items, now):
 	start_items = items.filter(column__start_time__day=now.day, column__start_time__month=now.month,
 	                           column__start_time__year=now.year, column__start_time__hour=now.hour,
 	                           column__start_time__minute=now.minute)
-
-	end_items = items.filter(column__end_time__day=now.day, column__end_time__month=now.month,
-	                         column__end_time__year=now.year, column__end_time__hour=now.hour,
-	                         column__end_time__minute=now.minute)
 	for item in start_items:
-		item.notify_start()
-	for item in end_items:
-		item.notify_end()
-	return start_items.count() + end_items.count()
+		item.notify()
+	return start_items.count()
 
 
 @shared_task

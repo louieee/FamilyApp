@@ -1,6 +1,6 @@
 
 
-Hello {{user}},
+Hello,
 This is a subtle reminder of the task that you are supposed
 to have started on. You are expected to be rounding up on this
 task as it is set to end on {{end_time}}. The title of

@@ -28,7 +28,8 @@ def move_tasks():
 		task.save()
 		if task.auto_move is True or task.repeat is True:
 			task.update_time()
-		task.notify_end()
+		task.remind_creator()
+		task.remind_assignees()
 	return tasks.count()
 
 

@@ -1,6 +1,6 @@
 
 
-Hello {{user}},
+Hello,
 This is an email notifying you of the task you are supposed to
 do now. The title of the task is {{task_title}}, here are the details
 of the task:

@@ -1,13 +1,11 @@
 
 
 
-Hello {{user}},
+Hello Member,
 This is notify you of the activity specified
 in the timetable "{{time_table}}" which is supposed
 to occur every {{row}} at {{start_time}}.
-The activity detail are:
-Title: {{item_title}}
-Description: {{item_detail}}
+The activity detail is "{{item_title}}".
 
 Yours Sincerely,
 {{family}}

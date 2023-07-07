@@ -1,5 +1,8 @@
 from django.db import models
 
+from core.models import User
+from core.services.email.timetable import send_item_email
+
 # Create your models here.
 
 "create a time table"
@@ -112,8 +115,12 @@ class Item(models.Model):
 	row = models.ForeignKey("core.Row", on_delete=models.CASCADE, null=True)
 	column = models.ForeignKey("core.Column", on_delete=models.CASCADE, null=True)
 
-	def notify_start(self):
-		...
-
-	def notify_end(self):
-		...
+	def notify(self):
+		emails = User.objects.filter(families__username=self.row.timetable.family.username).values_list("email",
+		                                                                                                flat=True)
+		send_item_email(email=list(emails),
+		                family=str(self.row.timetable.family),
+		                item_title=self.name,
+		                start_time=self.column.start_time.strftime("%d %B %Y at %I:%M%p"),
+		                row=self.row.title)
+		return

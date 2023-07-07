@@ -21,7 +21,7 @@ class Family(models.Model):
 		verbose_name_plural = "Families"
 
 	def __str__(self):
-		return f"{self.name} Family"
+		return f"{self.name}"
 
 	def can_use_ballot(self):
 		from core.models import Apps

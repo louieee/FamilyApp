@@ -83,8 +83,8 @@ class Task(models.Model):
 			                          email=[self.creator.email, ], family=str(self.stage.pipeline.family))
 			return
 		send_end_reminder_email(end_time=self.end_time.strftime("%d %B %Y at %I:%M%p"),
-		                          task_title=self.title, task_description=self.description,
-		                          email=[self.creator.email, ], family=str(self.stage.pipeline.family))
+		                        task_title=self.title, task_description=self.description,
+		                        email=[self.creator.email, ], family=str(self.stage.pipeline.family))
 		return
 
 	def remind_assignees(self, start=False):

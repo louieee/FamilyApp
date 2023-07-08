@@ -24,6 +24,7 @@ class User(AbstractUser):
 	gender = models.CharField(
 		max_length=10, choices=Gender.choices, default=None, null=True
 	)
+	online = models.BooleanField(default=False)
 
 	def get_role(self, family):
 		return UserRole.objects.filter(role__family=family, user=self).first()

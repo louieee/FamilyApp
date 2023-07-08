@@ -48,8 +48,8 @@ class SchedulerConsumer(WebsocketConsumer):
 			logging.critical("This action is not supported")
 			self.send("This action is not supported")
 			return
-		task = data['payload']['task']['title']
-		stage = data['payload']['stage']['title']
+		task = data['payload']['task']
+		stage = data['payload']['stage']
 		logging.critical(f"{task} just moved to a new stage => {stage}")
 		async_to_sync(self.channel_layer.group_send)(
 			str(self.family.identifier), {"type": "broadcast", "data": json.dumps(data)}

@@ -50,7 +50,7 @@ class SubscriptionConsumer(WebsocketConsumer):
             logging.critical("This action is not supported")
             self.send("This action is not supported")
             return
-        txn_id = data['payload']['subscription']['txn_id']
+        txn_id = data['payload']['subscription']
         logging.critical(f"Subscription with txn_id => {txn_id} is now {data['action']}")
         async_to_sync(self.channel_layer.group_send)(
             str(self.family.identifier), {"type": "broadcast", "data": json.dumps(data)}

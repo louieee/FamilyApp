@@ -7,6 +7,7 @@ from rest_framework import serializers
 from core.models import User, Family, FamilyTempData, FamilyTempDataTypes
 from core.serializers.system import CustomCharField, CustomEmailField
 from core.services.email.family import send_signup_email, send_welcome_email, send_invite_email
+from core.utilities.utils import send_ws
 
 
 class FamilySerializer(serializers.ModelSerializer):
@@ -166,6 +167,11 @@ class AcceptFamilyInviteSerializer(serializers.Serializer):
         temp.delete()
         send_welcome_email(user=str(user), family=str(family), creator=str(family.creator),
                            email=user.email)
+        from core.serializers.user import UserSerializer # noqa
+        ws_payload = dict(sender=UserSerializer(user).data,
+                          family=family.id)
+        send_ws(user=user, family=family.username, socket_type="family",
+                action="join", payload=ws_payload)
         return user
 
 

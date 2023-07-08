@@ -8,8 +8,9 @@ from rest_framework.viewsets import ModelViewSet
 from core.models import VotingSession, Position, Aspirant, Family, User
 from core.serializers.ballot import VotingSessionSerializer, CreateVotingSessionSerializer, PositionSerializer, \
 	CreateAspirantSerializer, AspirantSerializer
+from core.serializers.user import UserSerializer
 from core.utilities.api_response import SuccessResponse, FailureResponse
-from core.utilities.utils import get_family
+from core.utilities.utils import get_family, send_ws
 
 
 class CanUseBallot(BasePermission):
@@ -131,6 +132,11 @@ class AspirantAPI(ModelViewSet):
 		aspirant.votes.add(request.user)
 		aspirant.save()
 		data = AspirantSerializer(aspirant).data
+		ws_payload = data
+		ws_payload['family'] = aspirant.session.family_id
+		ws_payload['sender'] = UserSerializer(request.user).data
+		send_ws(action="vote", family=aspirant.session.family.username,payload=ws_payload,
+		        socket_type="ballot", user=request.user)
 		return SuccessResponse(message="Voted successfully", data=data)
 
 

@@ -5,6 +5,9 @@ import django
 from celery import shared_task
 from django.utils import timezone
 
+from core.serializers.user import UserSerializer
+from core.utilities.utils import send_ws
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FamilyBackend.settings')
 django.setup()
 from core.models import Subscription
@@ -56,5 +59,9 @@ def notify_expiry():
 	                                            expiry_date__year=now.year, expiry_date__hour=now.hour,
 	                                            exppiry_date__minute=now.minute)
 	for sub in subscriptions:
+		send_ws(user=sub.family.creator, family=sub.family.username,
+		        socket_type="subscription", action="expired",
+		        payload=dict(sender=UserSerializer(sub.family.creator).data,
+		                     family=sub.family.id, subscription=sub.txn_id))
 		sub.send_expiry_email()
 	return subscriptions.count()

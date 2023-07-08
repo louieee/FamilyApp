@@ -4,6 +4,9 @@ import django
 from celery import shared_task
 from django.utils import timezone
 
+from core.serializers.user import UserSerializer
+from core.utilities.utils import send_ws
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'FamilyBackend.settings')
 django.setup()
 from datetime import timedelta
@@ -23,7 +26,13 @@ def move_tasks():
 	for task in tasks:
 		if task.stage.next_stage and task.auto_move is True:
 			task.stage = tasks.stage.next_stage
-		if task.auto_done:
+			send_ws(user=task.creator, family=task.stage.pipeline.family.username,
+			        action="move", socket_type="scheduler",
+			        payload=dict(sender=UserSerializer(task.creator).data,
+			                     family=task.stage.pipeline.family.id,
+			                     task=task.title,
+			                     stage=task.stage.next_stage.title))
+		if (task.auto_done is True and task.auto_move is False) or (task.auto_move and not task.stage.next_stage):
 			task.done = True
 		task.save()
 		if task.auto_move is True or task.repeat is True:
